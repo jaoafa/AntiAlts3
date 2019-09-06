@@ -1,0 +1,92 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.jaoafa</groupId>
+	<artifactId>AntiAlts3</artifactId>
+	<version>0.0.1</version>
+	<name>AntiAlts3</name>
+	<properties>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
+	</properties>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.6.1</version>
+				<configuration>
+					<source>1.8</source>
+					<target>1.8</target>
+				</configuration>
+			</plugin>
+		</plugins>
+		<resources>
+			<resource>
+				<targetPath>.</targetPath>
+				<filtering>true</filtering>
+				<directory>src/main/resources/</directory>
+			</resource>
+		</resources>
+	</build>
+	<repositories>
+		<!-- Spigot/Bukkit -->
+		<repository>
+			<id>spigot-repo</id>
+			<url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
+		</repository>
+		<!-- LuckPerms -->
+		<repository>
+			<id>TheCentralRepository</id>
+			<url>https://repo1.maven.org/maven2/</url>
+		</repository>
+		<!-- Google Guava -->
+		<repository>
+			<id>Google</id>
+			<url>https://mvnrepository.com/</url>
+		</repository>
+	</repositories>
+	<dependencies>
+		<!--Spigot-API -->
+		<dependency>
+			<groupId>org.spigotmc</groupId>
+			<artifactId>spigot-api</artifactId>
+			<version>1.12.2-R0.1-SNAPSHOT</version>
+		</dependency>
+		<!--Bukkit API -->
+		<dependency>
+			<groupId>org.bukkit</groupId>
+			<artifactId>bukkit</artifactId>
+			<version>1.12.2-R0.1-SNAPSHOT</version>
+		</dependency>
+		<!--CraftBukkit -->
+		<dependency>
+			<groupId>org.bukkit</groupId>
+			<artifactId>craftbukkit</artifactId>
+			<version>1.12.2-R0.1-SNAPSHOT</version>
+			<systemPath>${basedir}/lib/craftbukkit-1.12.2.jar</systemPath>
+			<scope>system</scope>
+		</dependency>
+		<!-- PermissionsEx(PEX) -->
+		<dependency>
+			<groupId>ru.tehkode</groupId>
+			<artifactId>PermissionsEx</artifactId>
+			<version>1.23.4</version>
+			<systemPath>${basedir}/lib/PermissionsEx-1.23.4.jar</systemPath>
+			<scope>system</scope>
+		</dependency>
+		<!-- LuckPerms -->
+		<dependency>
+			<groupId>me.lucko.luckperms</groupId>
+			<artifactId>luckperms-api</artifactId>
+			<version>4.0</version>
+		</dependency>
+		<!-- Google Guava -->
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>24.0-jre</version>
+		</dependency>
+	</dependencies>
+	<url>http://jaoafa.com/</url>
+</project>

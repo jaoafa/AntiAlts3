@@ -1,0 +1,5 @@
+language: Java
+jdk:
+  - oraclejdk8
+notifications:
+  webhooks: https://tomachi.jpn.ph/tomachi/travisci_notice.php

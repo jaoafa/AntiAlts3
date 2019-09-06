@@ -1,0 +1,13 @@
+name: ${project.artifactId}
+main: com.jaoafa.AntiAlts3.AntiAlts3
+version: ${project.version}
+description: サブアカウントのログイン関連を制御するプラグイン
+database: true
+softdepend: [PermissionsEx, LuckPerms]
+author: mine_book000
+commands:
+   alts:
+      description: このプラグインに関する設定や情報が確認できます。
+      usage: /<command>
+      permission: AntiAlts3.alts
+      permission-message: You do not have permission to perform this command.
