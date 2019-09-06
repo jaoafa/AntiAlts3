@@ -192,7 +192,7 @@ public class Event_AsyncPreLogin implements Listener {
 		if (isNeedINSERT(uuid, address)) {
 			try {
 				PreparedStatement statement_insert = MySQL.getNewPreparedStatement(
-						"INSERT INTO antialts (player, uuid, userid, ip, host, domain, basedomain, firstlogin, lastlogi) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)");
+						"INSERT INTO antialts_new (player, uuid, userid, ip, host, domain, basedomain, firstlogin, lastlogi) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)");
 				statement_insert.setString(1, name);
 				statement_insert.setString(2, uuid.toString());
 				statement_insert.setInt(3, AntiAltsUserID);
@@ -224,7 +224,7 @@ public class Event_AsyncPreLogin implements Listener {
 	@Nonnull
 	int getAntiAltsUserID(UUID uuid) {
 		try {
-			PreparedStatement statement = MySQL.getNewPreparedStatement("SELECT * FROM antialts WHERE uuid = ?");
+			PreparedStatement statement = MySQL.getNewPreparedStatement("SELECT * FROM antialts_new WHERE uuid = ?");
 			statement.setString(1, uuid.toString());
 			ResultSet res = statement.executeQuery();
 			if (res.next()) {
@@ -248,13 +248,13 @@ public class Event_AsyncPreLogin implements Listener {
 	String changePlayerID(UUID uuid, String newPlayerID) {
 		try {
 			PreparedStatement statement = MySQL
-					.getNewPreparedStatement("SELECT * FROM antialts WHERE uuid = ? AND player != ?");
+					.getNewPreparedStatement("SELECT * FROM antialts_new WHERE uuid = ? AND player != ?");
 			statement.setString(1, uuid.toString());
 			statement.setString(2, newPlayerID);
 			ResultSet res = statement.executeQuery();
 			if (res.next()) {
 				PreparedStatement statement_update = MySQL
-						.getNewPreparedStatement("UPDATE antialts SET player = ? WHERE uuid = ?");
+						.getNewPreparedStatement("UPDATE antialts_new SET player = ? WHERE uuid = ?");
 				statement_update.setString(1, newPlayerID);
 				statement_update.setString(2, uuid.toString());
 				statement_update.executeUpdate();
@@ -274,7 +274,7 @@ public class Event_AsyncPreLogin implements Listener {
 	void changeLastLogin(UUID uuid) {
 		try {
 			PreparedStatement statement = MySQL
-					.getNewPreparedStatement("UPDATE antialts SET lastlogin = CURRENT_TIMESTAMP WHERE uuid = ?");
+					.getNewPreparedStatement("UPDATE antialts_new SET lastlogin = CURRENT_TIMESTAMP WHERE uuid = ?");
 			statement.setString(1, uuid.toString());
 			statement.executeUpdate();
 		} catch (ClassNotFoundException | SQLException e) {
@@ -321,7 +321,7 @@ public class Event_AsyncPreLogin implements Listener {
 
 			// そうでない場合、同一AntiAltsUserIDのリストを取得して1番目をメインとする。(idが一番小さいもの)
 			PreparedStatement statement_useridlist = MySQL
-					.getNewPreparedStatement("SELECT * FROM antialts WHERE userid = ? ORDER BY id ASC");
+					.getNewPreparedStatement("SELECT * FROM antialts_new WHERE userid = ? ORDER BY id ASC");
 			statement_useridlist.setInt(1, AntiAltsUserID);
 			ResultSet useridlist_res = statement_useridlist.executeQuery();
 			if (useridlist_res.next()) {
@@ -343,7 +343,7 @@ public class Event_AsyncPreLogin implements Listener {
 	int getIdenticalIPUsersCount(InetAddress address, UUID exceptUUID) {
 		try {
 			PreparedStatement statement = MySQL
-					.getNewPreparedStatement("SELECT COUNT(*) FROM antialts WHERE ip = ? AND uuid != ?");
+					.getNewPreparedStatement("SELECT COUNT(*) FROM antialts_new WHERE ip = ? AND uuid != ?");
 			statement.setString(1, address.getHostAddress());
 			statement.setString(2, exceptUUID.toString());
 			ResultSet res = statement.executeQuery();
@@ -367,7 +367,7 @@ public class Event_AsyncPreLogin implements Listener {
 		try {
 			int AntiAltsUserID = Integer.MAX_VALUE;
 			PreparedStatement statement_sameIP = MySQL
-					.getNewPreparedStatement("SELECT * FROM antialts WHERE ip = ? AND uuid != ?");
+					.getNewPreparedStatement("SELECT * FROM antialts_new WHERE ip = ? AND uuid != ?");
 			statement_sameIP.setString(1, address.getHostAddress());
 			statement_sameIP.setString(2, exceptUUID.toString());
 			ResultSet res_sameIP = statement_sameIP.executeQuery();
@@ -382,7 +382,7 @@ public class Event_AsyncPreLogin implements Listener {
 			res_sameIP.first();
 			while (res_sameIP.next()) {
 				PreparedStatement statement_updateUserid = MySQL
-						.getNewPreparedStatement("UPDATE antialts SET userid = ? WHERE id = ?");
+						.getNewPreparedStatement("UPDATE antialts_new SET userid = ? WHERE id = ?");
 				statement_updateUserid.setInt(1, AntiAltsUserID);
 				statement_updateUserid.setInt(2, res_sameIP.getInt("id"));
 				statement_updateUserid.executeUpdate();
@@ -403,7 +403,7 @@ public class Event_AsyncPreLogin implements Listener {
 		try {
 			Timestamp firstlogin = new Timestamp(System.currentTimeMillis());
 			PreparedStatement statement_FirstLogin = MySQL
-					.getNewPreparedStatement("SELECT * FROM antialts WHERE uuid = ?");
+					.getNewPreparedStatement("SELECT * FROM antialts_new WHERE uuid = ?");
 			statement_FirstLogin.setString(1, uuid.toString());
 			ResultSet res_FirstLogin = statement_FirstLogin.executeQuery();
 			while (res_FirstLogin.next()) {
@@ -415,7 +415,7 @@ public class Event_AsyncPreLogin implements Listener {
 			res_FirstLogin.first();
 			while (res_FirstLogin.next()) {
 				PreparedStatement statement_updatefirstlogin = MySQL
-						.getNewPreparedStatement("UPDATE antialts SET firstlogin = ? WHERE id = ?");
+						.getNewPreparedStatement("UPDATE antialts_new SET firstlogin = ? WHERE id = ?");
 				statement_updatefirstlogin.setTimestamp(1, firstlogin);
 				statement_updatefirstlogin.setInt(2, res_FirstLogin.getInt("id"));
 				statement_updatefirstlogin.executeUpdate();
@@ -432,12 +432,12 @@ public class Event_AsyncPreLogin implements Listener {
 	void setLastLogin(UUID uuid) {
 		try {
 			PreparedStatement statement_LastLogin = MySQL
-					.getNewPreparedStatement("SELECT * FROM antialts WHERE uuid = ?");
+					.getNewPreparedStatement("SELECT * FROM antialts_new WHERE uuid = ?");
 			statement_LastLogin.setString(1, uuid.toString());
 			ResultSet res_LastLogin = statement_LastLogin.executeQuery();
 			while (res_LastLogin.next()) {
 				PreparedStatement statement_updatelastlogin = MySQL
-						.getNewPreparedStatement("UPDATE antialts SET lastlogin = CURRENT_TIMESTAMP WHERE id = ?");
+						.getNewPreparedStatement("UPDATE antialts_new SET lastlogin = CURRENT_TIMESTAMP WHERE id = ?");
 				statement_updatelastlogin.setInt(1, res_LastLogin.getInt("id"));
 				statement_updatelastlogin.executeUpdate();
 			}
@@ -455,7 +455,7 @@ public class Event_AsyncPreLogin implements Listener {
 	boolean isNeedINSERT(UUID uuid, InetAddress address) {
 		try {
 			PreparedStatement statement_selectAlready = MySQL
-					.getNewPreparedStatement("SELECT COUNT(*) FROM antialts WHERE uuid = ? AND ip = ?");
+					.getNewPreparedStatement("SELECT COUNT(*) FROM antialts_new WHERE uuid = ? AND ip = ?");
 			statement_selectAlready.setString(1, uuid.toString());
 			statement_selectAlready.setString(2, address.getHostAddress());
 			ResultSet res_selectAlready = statement_selectAlready.executeQuery();
@@ -476,7 +476,7 @@ public class Event_AsyncPreLogin implements Listener {
 	int getLastID() {
 		try {
 			PreparedStatement statement = MySQL
-					.getNewPreparedStatement("SELECT * FROM antialts ORDER BY userid DESC LIMIT 1");
+					.getNewPreparedStatement("SELECT * FROM antialts_new ORDER BY userid DESC LIMIT 1");
 			ResultSet res = statement.executeQuery();
 			if (res.next()) {
 				return res.getInt(1);
