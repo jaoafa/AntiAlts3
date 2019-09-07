@@ -5,7 +5,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -87,6 +91,8 @@ public class Event_AsyncPreLogin implements Listener {
 		plugin.getLogger().info("IP: " + ip);
 		plugin.getLogger().info("HOST: " + host);
 		plugin.getLogger().info("DOMAIN: " + domain);
+		if (BaseDomain != null)
+			plugin.getLogger().info("BASEDOMAIN: " + BaseDomain.toString());
 
 		// 2. UUIDをMojangAPIから取得
 		UUID uuid = AntiAlts3.getUUID(name);
@@ -187,12 +193,13 @@ public class Event_AsyncPreLogin implements Listener {
 			}
 		}
 
+		// 9. ログイン許可？
 		setFirstLogin(uuid);
 		setLastLogin(uuid);
 		if (isNeedINSERT(uuid, address)) {
 			try {
 				PreparedStatement statement_insert = MySQL.getNewPreparedStatement(
-						"INSERT INTO antialts_new (player, uuid, userid, ip, host, domain, basedomain, firstlogin, lastlogi) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)");
+						"INSERT INTO antialts_new (player, uuid, userid, ip, host, domain, basedomain, firstlogin, lastlogin) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)");
 				statement_insert.setString(1, name);
 				statement_insert.setString(2, uuid.toString());
 				statement_insert.setInt(3, AntiAltsUserID);
@@ -213,6 +220,46 @@ public class Event_AsyncPreLogin implements Listener {
 			} catch (ClassNotFoundException | SQLException e) {
 				AntiAlts3.report(e);
 			}
+		}
+
+		// 10. 同一AntiAltsUserIDのプレイヤーリストを管理部・モデレーター・常連に表示(Discordにも。)
+		Set<OfflinePlayer> IdenticalUserIDPlayers = getUsers(AntiAltsUserID, uuid);
+		if (!IdenticalUserIDPlayers.isEmpty()) {
+			List<String> names = IdenticalUserIDPlayers.stream().map(_player -> _player.getName())
+					.collect(Collectors.toList());
+			for (Player p : Bukkit.getServer().getOnlinePlayers()) {
+				String group = PermissionsManager.getPermissionMainGroup(p);
+				if (group.equalsIgnoreCase("Admin") || group.equalsIgnoreCase("Moderator")
+						|| group.equalsIgnoreCase("Regular")) {
+					p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + "|-- " + name + " : - : サブアカウント情報 --|");
+					p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + "このプレイヤーには、以下、" + IdenticalUserIDPlayers.size()
+							+ "個見つかっています。");
+					p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + String.join(", ", names));
+				}
+			}
+			Discord.send("619637580987760656", "__**[AntiAlts3]**__ `" + name + "` : - : サブアカウント情報\n"
+					+ "このプレイヤーには、以下、" + IdenticalUserIDPlayers.size() + "個のアカウントが見つかっています。\n"
+					+ String.join(", ", names));
+		}
+
+		// 11. 同一ドメインの非同一UUIDで、48h以内にラストログインしたプレイヤーをリスト化。管理部・モデレーターに出力
+		Set<OfflinePlayer> IdenticalBaseDomainPlayers = getUsers(BaseDomain, uuid);
+		if (!IdenticalBaseDomainPlayers.isEmpty()) {
+			List<String> names = IdenticalBaseDomainPlayers.stream().map(_player -> _player.getName())
+					.collect(Collectors.toList());
+			for (Player p : Bukkit.getServer().getOnlinePlayers()) {
+				String group = PermissionsManager.getPermissionMainGroup(p);
+				if (group.equalsIgnoreCase("Admin") || group.equalsIgnoreCase("Moderator")) {
+					p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + "|-- " + name + " : - : 同一ベースドメイン情報 --|");
+					p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + "このプレイヤードメインと同一のプレイヤーが"
+							+ IdenticalBaseDomainPlayers.size()
+							+ "個見つかっています。");
+					p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + String.join(", ", names));
+				}
+			}
+			Discord.send("619637580987760656", "__**[AntiAlts3]**__ `" + name + "` : - : 同一ベースドメイン情報\n"
+					+ "このプレイヤードメインと同一のプレイヤーが" + +IdenticalBaseDomainPlayers.size()
+					+ "個見つかっています。");
 		}
 	}
 
@@ -485,6 +532,65 @@ public class Event_AsyncPreLogin implements Listener {
 		} catch (ClassNotFoundException | SQLException e) {
 			AntiAlts3.report(e);
 			return -1;
+		}
+	}
+
+	@Nonnull
+	Set<OfflinePlayer> getUsers(int AntiAltsUserID, UUID exceptUUID) {
+		try {
+			PreparedStatement statement = MySQL
+					.getNewPreparedStatement("SELECT * FROM antialts_new WHERE userid = ?");
+			statement.setInt(1, AntiAltsUserID);
+			ResultSet res = statement.executeQuery();
+			Set<OfflinePlayer> players = new HashSet<>();
+			while (res.next()) {
+				UUID uuid = UUID.fromString(res.getString("uuid"));
+				if (uuid.equals(exceptUUID)) {
+					continue;
+				}
+				OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
+				List<OfflinePlayer> filtered = players.stream().filter(
+						_player -> _player != null && _player.getUniqueId().equals(player.getUniqueId()))
+						.collect(Collectors.toList());
+				if (!filtered.isEmpty()) {
+					continue;
+				}
+				players.add(player);
+			}
+			return players;
+		} catch (ClassNotFoundException | SQLException e) {
+			AntiAlts3.report(e);
+			return new HashSet<>();
+		}
+	}
+
+	@Nonnull
+	Set<OfflinePlayer> getUsers(InternetDomainName BaseDomain, UUID exceptUUID) {
+		try {
+			PreparedStatement statement = MySQL
+					.getNewPreparedStatement(
+							"SELECT * FROM antialts_new WHERE basedomain = ? AND DATE_ADD(date, INTERVAL 2 DAY) > NOW()");
+			statement.setString(1, BaseDomain.toString());
+			ResultSet res = statement.executeQuery();
+			Set<OfflinePlayer> players = new HashSet<>();
+			while (res.next()) {
+				UUID uuid = UUID.fromString(res.getString("uuid"));
+				if (uuid.equals(exceptUUID)) {
+					continue;
+				}
+				OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
+				List<OfflinePlayer> filtered = players.stream().filter(
+						_player -> _player != null && _player.getUniqueId().equals(player.getUniqueId()))
+						.collect(Collectors.toList());
+				if (!filtered.isEmpty()) {
+					continue;
+				}
+				players.add(player);
+			}
+			return players;
+		} catch (ClassNotFoundException | SQLException e) {
+			AntiAlts3.report(e);
+			return new HashSet<>();
 		}
 	}
 }
