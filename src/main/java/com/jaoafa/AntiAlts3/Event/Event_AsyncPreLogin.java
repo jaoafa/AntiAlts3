@@ -259,7 +259,8 @@ public class Event_AsyncPreLogin implements Listener {
 			}
 			Discord.send("619637580987760656", "__**[AntiAlts3]**__ `" + name + "` : - : 同一ベースドメイン情報\n"
 					+ "このプレイヤードメインと同一のプレイヤーが" + +IdenticalBaseDomainPlayers.size()
-					+ "個見つかっています。");
+					+ "個見つかっています。\n"
+					+ String.join(", ", names));
 		}
 	}
 
