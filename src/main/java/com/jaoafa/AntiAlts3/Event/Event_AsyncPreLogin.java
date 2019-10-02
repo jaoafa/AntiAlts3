@@ -16,7 +16,6 @@ import javax.annotation.Nullable;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -27,6 +26,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import com.google.common.net.InternetDomainName;
 import com.jaoafa.AntiAlts3.AntiAlts3;
+import com.jaoafa.AntiAlts3.AntiAltsPlayer;
 import com.jaoafa.AntiAlts3.Discord;
 import com.jaoafa.AntiAlts3.MySQL;
 import com.jaoafa.AntiAlts3.PermissionsManager;
@@ -136,7 +136,7 @@ public class Event_AsyncPreLogin implements Listener {
 		// 7. 同一AntiAltsUserIDをリスト化し、メインアカウントのUUIDに合うかどうか(→合わなければNG)。
 		// antialts_mainに登録されている場合、同一AntiAltsUserIDは全てantialts_mainに登録されているアカウントをメインとする。
 		// そうでない場合、同一AntiAltsUserIDのリストを取得して1番目をメインとする。(idが一番小さいもの)
-		OfflinePlayer MainAccount = getMainUUID(AntiAltsUserID);
+		AntiAltsPlayer MainAccount = getMainUUID(AntiAltsUserID);
 		String MainAltID = name;
 		UUID MainAltUUID = uuid;
 		if (MainAccount != null) {
@@ -223,7 +223,7 @@ public class Event_AsyncPreLogin implements Listener {
 		}
 
 		// 10. 同一AntiAltsUserIDのプレイヤーリストを管理部・モデレーター・常連に表示(Discordにも。)
-		Set<OfflinePlayer> IdenticalUserIDPlayers = getUsers(AntiAltsUserID, uuid);
+		Set<AntiAltsPlayer> IdenticalUserIDPlayers = getUsers(AntiAltsUserID, uuid);
 		if (!IdenticalUserIDPlayers.isEmpty()) {
 			List<String> names = IdenticalUserIDPlayers.stream().map(_player -> _player.getName())
 					.collect(Collectors.toList());
@@ -243,7 +243,7 @@ public class Event_AsyncPreLogin implements Listener {
 		}
 
 		// 11. 同一ドメインの非同一UUIDで、48h以内にラストログインしたプレイヤーをリスト化。管理部・モデレーターに出力
-		Set<OfflinePlayer> IdenticalBaseDomainPlayers = getUsers(BaseDomain, uuid);
+		Set<AntiAltsPlayer> IdenticalBaseDomainPlayers = getUsers(BaseDomain, uuid);
 		if (!IdenticalBaseDomainPlayers.isEmpty()) {
 			List<String> names = IdenticalBaseDomainPlayers.stream().map(_player -> _player.getName())
 					.collect(Collectors.toList());
@@ -277,8 +277,11 @@ public class Event_AsyncPreLogin implements Listener {
 			statement.setString(1, uuid.toString());
 			ResultSet res = statement.executeQuery();
 			if (res.next()) {
-				return res.getInt("userid");
+				int userid = res.getInt("userid");
+				statement.close();
+				return userid;
 			} else {
+				statement.close();
 				return -1;
 			}
 		} catch (ClassNotFoundException | SQLException e) {
@@ -307,8 +310,11 @@ public class Event_AsyncPreLogin implements Listener {
 				statement_update.setString(1, newPlayerID);
 				statement_update.setString(2, uuid.toString());
 				statement_update.executeUpdate();
-				return res.getString("player");
+				String player = res.getString("player");
+				statement.close();
+				return player;
 			}
+			statement.close();
 			return null;
 		} catch (ClassNotFoundException | SQLException e) {
 			AntiAlts3.report(e);
@@ -358,14 +364,18 @@ public class Event_AsyncPreLogin implements Listener {
 	 * @return メインアカウント
 	 */
 	@Nullable
-	OfflinePlayer getMainUUID(int AntiAltsUserID) {
+	AntiAltsPlayer getMainUUID(int AntiAltsUserID) {
 		try {
 			// antialts_mainに登録されている場合、同一AntiAltsUserIDは全てantialts_mainに登録されているアカウントをメインとする。
 			PreparedStatement statement = MySQL.getNewPreparedStatement("SELECT * FROM antialts_main WHERE userid = ?");
 			statement.setInt(1, AntiAltsUserID);
 			ResultSet res = statement.executeQuery();
 			if (res.next()) {
-				return Bukkit.getOfflinePlayer(UUID.fromString(res.getString("uuid")));
+				String name = res.getString("player");
+				UUID uuid = UUID.fromString(res.getString("uuid"));
+				statement.close();
+				return new AntiAltsPlayer(name, uuid);
+				//return Bukkit.getOfflinePlayer(UUID.fromString(res.getString("uuid")));
 			}
 
 			// そうでない場合、同一AntiAltsUserIDのリストを取得して1番目をメインとする。(idが一番小さいもの)
@@ -374,7 +384,11 @@ public class Event_AsyncPreLogin implements Listener {
 			statement_useridlist.setInt(1, AntiAltsUserID);
 			ResultSet useridlist_res = statement_useridlist.executeQuery();
 			if (useridlist_res.next()) {
-				return Bukkit.getOfflinePlayer(UUID.fromString(useridlist_res.getString("uuid")));
+				String name = useridlist_res.getString("player");
+				UUID uuid = UUID.fromString(useridlist_res.getString("uuid"));
+				statement.close();
+				return new AntiAltsPlayer(name, uuid);
+				//return Bukkit.getOfflinePlayer(UUID.fromString(useridlist_res.getString("uuid")));
 			}
 			return null;
 		} catch (ClassNotFoundException | SQLException e) {
@@ -538,20 +552,21 @@ public class Event_AsyncPreLogin implements Listener {
 	}
 
 	@Nonnull
-	Set<OfflinePlayer> getUsers(int AntiAltsUserID, UUID exceptUUID) {
+	Set<AntiAltsPlayer> getUsers(int AntiAltsUserID, UUID exceptUUID) {
 		try {
 			PreparedStatement statement = MySQL
 					.getNewPreparedStatement("SELECT * FROM antialts_new WHERE userid = ?");
 			statement.setInt(1, AntiAltsUserID);
 			ResultSet res = statement.executeQuery();
-			Set<OfflinePlayer> players = new HashSet<>();
+			Set<AntiAltsPlayer> players = new HashSet<>();
 			while (res.next()) {
+				String name = res.getString("player");
 				UUID uuid = UUID.fromString(res.getString("uuid"));
 				if (uuid.equals(exceptUUID)) {
 					continue;
 				}
-				OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
-				List<OfflinePlayer> filtered = players.stream().filter(
+				AntiAltsPlayer player = new AntiAltsPlayer(name, uuid);
+				List<AntiAltsPlayer> filtered = players.stream().filter(
 						_player -> _player != null && _player.getUniqueId().equals(player.getUniqueId()))
 						.collect(Collectors.toList());
 				if (!filtered.isEmpty()) {
@@ -567,21 +582,22 @@ public class Event_AsyncPreLogin implements Listener {
 	}
 
 	@Nonnull
-	Set<OfflinePlayer> getUsers(InternetDomainName BaseDomain, UUID exceptUUID) {
+	Set<AntiAltsPlayer> getUsers(InternetDomainName BaseDomain, UUID exceptUUID) {
 		try {
 			PreparedStatement statement = MySQL
 					.getNewPreparedStatement(
 							"SELECT * FROM antialts_new WHERE basedomain = ? AND DATE_ADD(date, INTERVAL 2 DAY) > NOW()");
 			statement.setString(1, BaseDomain.toString());
 			ResultSet res = statement.executeQuery();
-			Set<OfflinePlayer> players = new HashSet<>();
+			Set<AntiAltsPlayer> players = new HashSet<>();
 			while (res.next()) {
+				String name = res.getString("player");
 				UUID uuid = UUID.fromString(res.getString("uuid"));
 				if (uuid.equals(exceptUUID)) {
 					continue;
 				}
-				OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
-				List<OfflinePlayer> filtered = players.stream().filter(
+				AntiAltsPlayer player = new AntiAltsPlayer(name, uuid);
+				List<AntiAltsPlayer> filtered = players.stream().filter(
 						_player -> _player != null && _player.getUniqueId().equals(player.getUniqueId()))
 						.collect(Collectors.toList());
 				if (!filtered.isEmpty()) {
