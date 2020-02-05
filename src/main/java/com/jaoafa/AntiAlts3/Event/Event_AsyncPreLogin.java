@@ -63,6 +63,7 @@ public class Event_AsyncPreLogin implements Listener {
 	 */
 	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onAsyncPreLogin(AsyncPlayerPreLoginEvent event) {
+		boolean loginOK = true;
 		// 1. ログイン試行 AsyncPlayerPreLoginEvent
 
 		String name = event.getName();
@@ -161,22 +162,27 @@ public class Event_AsyncPreLogin implements Listener {
 			}
 			Discord.send("597423444501463040",
 					"__**[AntiAlts3]**__ `" + name + "`: サブアカウントログイン規制(1 - メイン: " + MainAltID + ")");
-			return;
+			loginOK = false;
 		}
 
 		// 8. 同一IPな一覧を取得。非同一UUIDがあったらNG。
-		if (getIdenticalIPUsersCount(address, uuid) != 0) {
+		if (loginOK && getIdenticalIPUsersCount(address, uuid) != 0) {
 			// AntiAltsUserIDが一緒になるべき / 一番小さいAntiAltsUserIDへ変更
 			int i = getIdenticalIPSmallestID_And_SetID(address, uuid);
 			if (i == -1)
 				AntiAltsUserID = i;
-			MainAccount = getMainUUID(AntiAltsUserID);
-			MainAltID = MainAccount.getName();
-			MainAltUUID = MainAccount.getUniqueId();
-			if (!uuid.equals(MainAltUUID)) {
+			AntiAltsPlayer IdenticalIPMainAccount = getMainUUID(AntiAltsUserID);
+			String IdenticalIPMainAltID = name;
+			UUID IdenticalIPMainAltUUID = uuid;
+			if (IdenticalIPMainAccount != null) {
+				IdenticalIPMainAltID = IdenticalIPMainAccount.getName();
+				IdenticalIPMainAltUUID = IdenticalIPMainAccount.getUniqueId();
+			}
+			if (!uuid.equals(IdenticalIPMainAltUUID)) {
 				String message = ChatColor.RED + "----- ANTI ALTS -----\n"
 						+ ChatColor.RESET + ChatColor.WHITE + "あなたは以下のアカウントで既にログインをされたことがあるようです。(2)\n"
-						+ ChatColor.RESET + ChatColor.AQUA + MainAltID + " (" + MainAltUUID.toString() + ")\n"
+						+ ChatColor.RESET + ChatColor.AQUA + IdenticalIPMainAltID + " ("
+						+ IdenticalIPMainAltUUID.toString() + ")\n"
 						+ ChatColor.RESET + ChatColor.WHITE
 						+ "もしこの判定が誤判定と思われる場合は、公式Discord#supportでお問い合わせをお願い致します。";
 				event.disallow(Result.KICK_BANNED, message);
@@ -184,18 +190,14 @@ public class Event_AsyncPreLogin implements Listener {
 					String group = PermissionsManager.getPermissionMainGroup(p);
 					if (group.equalsIgnoreCase("Admin") || group.equalsIgnoreCase("Moderator")) {
 						p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + name + ": サブアカウントログイン規制(2 - メイン: "
-								+ MainAltID + ")");
+								+ IdenticalIPMainAltID + ")");
 					}
 				}
 				Discord.send("597423444501463040",
-						"__**[AntiAlts3]**__ `" + name + "`: サブアカウントログイン規制(2 - メイン: " + MainAltID + ")");
-				return;
+						"__**[AntiAlts3]**__ `" + name + "`: サブアカウントログイン規制(2 - メイン: " + IdenticalIPMainAltID + ")");
 			}
 		}
 
-		// 9. ログイン許可？
-		setFirstLogin(uuid);
-		setLastLogin(uuid);
 		if (isNeedINSERT(uuid, address)) {
 			try {
 				PreparedStatement statement_insert = MySQL.getNewPreparedStatement(
@@ -220,6 +222,14 @@ public class Event_AsyncPreLogin implements Listener {
 			} catch (ClassNotFoundException | SQLException e) {
 				AntiAlts3.report(e);
 			}
+		}
+
+		setLastLogin(uuid);
+		setFirstLogin(uuid);
+
+		// 9. ログイン許可？
+		if (!loginOK) {
+			return;
 		}
 
 		// 10. 同一AntiAltsUserIDのプレイヤーリストを管理部・モデレーター・常連に表示(Discordにも。)
