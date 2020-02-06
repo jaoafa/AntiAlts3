@@ -39,13 +39,19 @@ public class Event_AsyncPreLogin implements Listener {
 	}
 
 	/*
+	 * ・データベースには、最新のプレイヤー名|UUID|AntiAlts固有のユーザーID|IP|Host|ドメイン|ベースドメイン|初回ログイン日時|最終ログイン日時|そのIPでの最終ログイン日時|データ挿入日時を記録
+	 * ・UUIDが同じならばそれらのデータのAntiAlts固有のユーザーIDは同じでなければならない
+	 * ・IPが同じならばそれらのデータのAntiAlts固有のユーザーIDは同じでなければならない
+	 * ・データベースのデータはIPとUUIDが同一なデータが二つ以上あってはならない
+	 *
 	 * 1. ログイン試行 AsyncPlayerPreLoginEvent
+	 *    各種情報をイベントデータから取得。ドメインをInternetDomainNameから、ベースドメインを後述の方法で出す
 	 * 2. UUIDをMojangAPIから取得
 	 * 3. UUIDが合致するデータ(プレイヤーデータ)がantialtsのデータベーステーブルにあるかどうか調べる。あればAntiAltsUserID取得
 	 * 4. UUIDが同じでMinecraftIDがデータベースのデータと違ったらデータベース更新。Discord通知
-	 * 5. データベースのプレイヤーデータのLastLogin更新
-	 * 6. ignoreの対象であれば以降の処理をしない。ログイン許可
-	 * 7. 同一AntiAltsUserIDをリスト化し、メインアカウントのUUIDに合うかどうか(→合わなければNG)。メインアカウントの判定方法は後述
+	 * 5. データベースのプレイヤーデータのLastLogin(User, IP)更新。
+	 * 6. ignoreの対象であれば以降の処理をしない。ログイン許可 -> return.
+	 * 7. 同一AntiAltsUserIDをリスト化し、メインアカウント(一番最初)のUUIDに合うかどうか(→合わなければNG)。メインアカウントの判定方法は後述
 	 * 8. 同一IPな一覧を取得。非同一UUIDがあったらNG。
 	 * 9. ログイン許可？
 	 * 10. 同一IPからログインしてきたプレイヤーリストを管理部・モデレーター・常連に表示(Discordにも。)
@@ -58,6 +64,10 @@ public class Event_AsyncPreLogin implements Listener {
 	 * メインアカウントの判定方法
 	 * antialts_mainに登録されている場合、同一AntiAltsUserIDは全てantialts_mainに登録されているアカウントをメインとする。
 	 * そうでない場合、同一AntiAltsUserIDのリストを取得して1番目をメインとする。(idが一番小さいもの)
+	 *
+	 * ベースドメイン
+	 * トップドメインから逆順に調べる。数字が入っていたらそれ以前までのドメインを「ベースドメイン」とする。
+	 * 例: 4.3.2.1.a.b.c.jp -> a.b.c.jp
 	 *
 	 * antialts_ignoreに登録されている場合、そのアカウントは判定しない。
 	 */
@@ -127,10 +137,12 @@ public class Event_AsyncPreLogin implements Listener {
 		} else {
 			AntiAltsUserID = getLastID() + 1;
 		}
+		plugin.getLogger().info("AntiAltsUserID: " + AntiAltsUserID);
 
 		// 6. ignoreの対象であれば以降の処理をしない。ログイン許可
 
 		if (isIgnoreUser(uuid)) {
+			plugin.getLogger().info("This user ignored. login allowed.");
 			return;
 		}
 
@@ -144,9 +156,11 @@ public class Event_AsyncPreLogin implements Listener {
 			MainAltID = MainAccount.getName();
 			MainAltUUID = MainAccount.getUniqueId();
 		}
+		plugin.getLogger().info("MainAltID: " + MainAltID);
 
 		if (!uuid.equals(MainAltUUID)) {
 			// メインアカウントではない
+			plugin.getLogger().info("This account is not MainAccount. (MainAccount: " + MainAltID + ")");
 			String message = ChatColor.RED + "----- ANTI ALTS -----\n"
 					+ ChatColor.RESET + ChatColor.WHITE + "あなたは以下のアカウントで既にログインをされたことがあるようです。(1)\n"
 					+ ChatColor.RESET + ChatColor.AQUA + MainAltID + " (" + MainAltUUID.toString() + ")\n"
@@ -163,14 +177,21 @@ public class Event_AsyncPreLogin implements Listener {
 			Discord.send("597423444501463040",
 					"__**[AntiAlts3]**__ `" + name + "`: サブアカウントログイン規制(1 - メイン: " + MainAltID + ")");
 			loginOK = false;
+			plugin.getLogger().info("Login disallowed.");
 		}
 
 		// 8. 同一IPな一覧を取得。非同一UUIDがあったらNG。
-		if (loginOK && getIdenticalIPUsersCount(address, uuid) != 0) {
+		int IdenticalIPUsersCount = getIdenticalIPUsersCount(address, uuid);
+		plugin.getLogger().info("IdenticalIPUsersCount: " + IdenticalIPUsersCount);
+		if (loginOK && IdenticalIPUsersCount != 0) {
 			// AntiAltsUserIDが一緒になるべき / 一番小さいAntiAltsUserIDへ変更
 			int i = getIdenticalIPSmallestID_And_SetID(address, uuid);
-			if (i == -1)
+			plugin.getLogger().info("getIdenticalIPSmallestID_And_SetID: " + i);
+			if (i == -1) {
 				AntiAltsUserID = i;
+				plugin.getLogger().info("change AntiAltsUserID: " + AntiAltsUserID);
+			}
+
 			AntiAltsPlayer IdenticalIPMainAccount = getMainUUID(AntiAltsUserID);
 			String IdenticalIPMainAltID = name;
 			UUID IdenticalIPMainAltUUID = uuid;
@@ -178,7 +199,10 @@ public class Event_AsyncPreLogin implements Listener {
 				IdenticalIPMainAltID = IdenticalIPMainAccount.getName();
 				IdenticalIPMainAltUUID = IdenticalIPMainAccount.getUniqueId();
 			}
+			plugin.getLogger().info("IdenticalIPMainAltID: " + IdenticalIPMainAltID);
 			if (!uuid.equals(IdenticalIPMainAltUUID)) {
+				plugin.getLogger().info(
+						"This account is not MainAccount. (MainAccount: " + IdenticalIPMainAltID + " | IdenticalIP)");
 				String message = ChatColor.RED + "----- ANTI ALTS -----\n"
 						+ ChatColor.RESET + ChatColor.WHITE + "あなたは以下のアカウントで既にログインをされたことがあるようです。(2)\n"
 						+ ChatColor.RESET + ChatColor.AQUA + IdenticalIPMainAltID + " ("
@@ -201,7 +225,7 @@ public class Event_AsyncPreLogin implements Listener {
 		if (isNeedINSERT(uuid, address)) {
 			try {
 				PreparedStatement statement_insert = MySQL.getNewPreparedStatement(
-						"INSERT INTO antialts_new (player, uuid, userid, ip, host, domain, basedomain, firstlogin, lastlogin) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)");
+						"INSERT INTO antialts_new (player, uuid, userid, ip, host, domain, basedomain, firstlogin, lastlogin, iplastlogin) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)");
 				statement_insert.setString(1, name);
 				statement_insert.setString(2, uuid.toString());
 				statement_insert.setInt(3, AntiAltsUserID);
@@ -224,6 +248,7 @@ public class Event_AsyncPreLogin implements Listener {
 			}
 		}
 
+		setIPLastLogin(uuid, address);
 		setLastLogin(uuid);
 		setFirstLogin(uuid);
 
@@ -504,16 +529,25 @@ public class Event_AsyncPreLogin implements Listener {
 	 */
 	void setLastLogin(UUID uuid) {
 		try {
-			PreparedStatement statement_LastLogin = MySQL
-					.getNewPreparedStatement("SELECT * FROM antialts_new WHERE uuid = ?");
-			statement_LastLogin.setString(1, uuid.toString());
-			ResultSet res_LastLogin = statement_LastLogin.executeQuery();
-			while (res_LastLogin.next()) {
-				PreparedStatement statement_updatelastlogin = MySQL
-						.getNewPreparedStatement("UPDATE antialts_new SET lastlogin = CURRENT_TIMESTAMP WHERE id = ?");
-				statement_updatelastlogin.setInt(1, res_LastLogin.getInt("id"));
-				statement_updatelastlogin.executeUpdate();
-			}
+			PreparedStatement statement_updatelastlogin = MySQL
+					.getNewPreparedStatement("UPDATE antialts_new SET lastlogin = CURRENT_TIMESTAMP WHERE uuid = ?");
+			statement_updatelastlogin.setString(1, uuid.toString());
+			statement_updatelastlogin.executeUpdate();
+		} catch (ClassNotFoundException | SQLException e) {
+			AntiAlts3.report(e);
+		}
+	}
+
+	/**
+	 * 指定したIPに合致するすべてのデータに対して現在の時刻を設定します。
+	 * @param uuid 対象のUUID
+	 */
+	void setIPLastLogin(UUID uuid, InetAddress address) {
+		try {
+			PreparedStatement statement_updatelastlogin = MySQL
+					.getNewPreparedStatement("UPDATE antialts_new SET iplastlogin = CURRENT_TIMESTAMP WHERE ip = ?");
+			statement_updatelastlogin.setString(1, address.getHostAddress());
+			statement_updatelastlogin.executeUpdate();
 		} catch (ClassNotFoundException | SQLException e) {
 			AntiAlts3.report(e);
 		}
@@ -549,7 +583,7 @@ public class Event_AsyncPreLogin implements Listener {
 	int getLastID() {
 		try {
 			PreparedStatement statement = MySQL
-					.getNewPreparedStatement("SELECT * FROM antialts_new ORDER BY userid DESC LIMIT 1");
+					.getNewPreparedStatement("SELECT * FROM antialts_new ORDER BY id DESC LIMIT 1");
 			ResultSet res = statement.executeQuery();
 			if (res.next()) {
 				return res.getInt(1);
