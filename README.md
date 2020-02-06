@@ -7,3 +7,9 @@
 [![jao Minecraft Server](https://raw.githubusercontent.com/jaoafa/jao-Minecraft-Server/master/logo/new_logo-421x97.png)](https://jaoafa.com)
 
 サブアカウントのログインを禁止し、メインアカウント(初めてログインしたアカウント)でのみログインできるようにします。
+
+## ライセンス / License
+
+当プロジェクトのライセンスは未指定(No License)です。[jaoafa/MyMaid3](https://github.com/jaoafa/MyMaid3)同様、一部、もしくはすべての複製、改変、再頒布を認めません。
+
+This project license is "No License". As in [jaoafa/MyMaid3](https://github.com/jaoafa/MyMaid3], duplication, modification, and redistribution of some or all are not permitted.
