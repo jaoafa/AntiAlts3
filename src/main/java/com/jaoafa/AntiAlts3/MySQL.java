@@ -5,6 +5,8 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import com.mysql.jdbc.exceptions.jdbc4.CommunicationsException;
+
 /**
  * Connects to and uses a MySQL database
  *
@@ -68,7 +70,8 @@ public class MySQL extends Database {
 		String connectionURL = "jdbc:mysql://"
 				+ this.hostname + ":" + this.port;
 		if (database != null) {
-			connectionURL = connectionURL + "/" + this.database + "?autoReconnect=true&useUnicode=true&characterEncoding=utf8";
+			connectionURL = connectionURL + "/" + this.database
+					+ "?autoReconnect=true&useUnicode=true&characterEncoding=utf8";
 		}
 
 		Class.forName("com.mysql.jdbc.Driver");
@@ -76,18 +79,20 @@ public class MySQL extends Database {
 				this.user, this.password);
 		return connection;
 	}
+
 	/**
 	 * 新しいPreparedStatementを返します。
 	 * @return 新しいPreparedStatement
 	 * @throws SQLException 新しいPreparedStatementの取得中にSQLExceptionが発生した場合
 	 * @throws ClassNotFoundException 新しいPreparedStatementの取得中にClassNotFoundExceptionが発生した場合
 	 */
-	public static PreparedStatement getNewPreparedStatement(String sql) throws SQLException, ClassNotFoundException{
+	public static PreparedStatement getNewPreparedStatement(String sql) throws SQLException, ClassNotFoundException {
 		PreparedStatement statement;
 		try {
-			if(((System.currentTimeMillis() / 1000L) - AntiAlts3.ConnectionCreate) >= 18000){
+			if (((System.currentTimeMillis() / 1000L) - AntiAlts3.ConnectionCreate) >= 18000) {
 				// com.mysql.jdbc.exceptions.jdbc4.CommunicationsExceptionの発生を防ぐため、最後にコネクションを作成したときから5時間以上経っていればコネクションを作り直す。
-				MySQL MySQL = new MySQL(AntiAlts3.sqlserver, "3306", "jaoafa", AntiAlts3.sqluser, AntiAlts3.sqlpassword);
+				MySQL MySQL = new MySQL(AntiAlts3.sqlserver, "3306", "jaoafa", AntiAlts3.sqluser,
+						AntiAlts3.sqlpassword);
 				try {
 					AntiAlts3.c = MySQL.openConnection();
 					AntiAlts3.ConnectionCreate = System.currentTimeMillis() / 1000L;
@@ -108,6 +113,17 @@ public class MySQL extends Database {
 				AntiAlts3.report(e);
 				throw e1;
 			}
+		} catch (CommunicationsException e) {
+			MySQL MySQL = new MySQL(AntiAlts3.sqlserver, "3306", "jaoafa", AntiAlts3.sqluser,
+					AntiAlts3.sqlpassword);
+			try {
+				AntiAlts3.c = MySQL.openConnection();
+				AntiAlts3.ConnectionCreate = System.currentTimeMillis() / 1000L;
+			} catch (ClassNotFoundException | SQLException ex) {
+				AntiAlts3.report(ex);
+				throw ex;
+			}
+			statement = AntiAlts3.c.prepareStatement(sql);
 		} catch (SQLException e) {
 			// TODO 自動生成された catch ブロック
 			AntiAlts3.report(e);

@@ -421,7 +421,7 @@ public class Event_AsyncPreLogin implements Listener {
 			if (useridlist_res.next()) {
 				String name = useridlist_res.getString("player");
 				UUID uuid = UUID.fromString(useridlist_res.getString("uuid"));
-				statement.close();
+				useridlist_res.close();
 				return new AntiAltsPlayer(name, uuid);
 				//return Bukkit.getOfflinePlayer(UUID.fromString(useridlist_res.getString("uuid")));
 			}
