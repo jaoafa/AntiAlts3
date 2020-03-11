@@ -89,8 +89,8 @@ public class MySQL extends Database {
 	public static PreparedStatement getNewPreparedStatement(String sql) throws SQLException, ClassNotFoundException {
 		PreparedStatement statement;
 		try {
-			if (((System.currentTimeMillis() / 1000L) - AntiAlts3.ConnectionCreate) >= 18000) {
-				// com.mysql.jdbc.exceptions.jdbc4.CommunicationsExceptionの発生を防ぐため、最後にコネクションを作成したときから5時間以上経っていればコネクションを作り直す。
+			if (((System.currentTimeMillis() / 1000L) - AntiAlts3.ConnectionCreate) >= 3600) {
+				// com.mysql.jdbc.exceptions.jdbc4.CommunicationsExceptionの発生を防ぐため、最後にコネクションを作成したときから1時間以上経っていればコネクションを作り直す。
 				MySQL MySQL = new MySQL(AntiAlts3.sqlserver, "3306", "jaoafa", AntiAlts3.sqluser,
 						AntiAlts3.sqlpassword);
 				try {
@@ -119,11 +119,11 @@ public class MySQL extends Database {
 			try {
 				AntiAlts3.c = MySQL.openConnection();
 				AntiAlts3.ConnectionCreate = System.currentTimeMillis() / 1000L;
+				statement = AntiAlts3.c.prepareStatement(sql);
 			} catch (ClassNotFoundException | SQLException ex) {
 				AntiAlts3.report(ex);
 				throw ex;
 			}
-			statement = AntiAlts3.c.prepareStatement(sql);
 		} catch (SQLException e) {
 			// TODO 自動生成された catch ブロック
 			AntiAlts3.report(e);
