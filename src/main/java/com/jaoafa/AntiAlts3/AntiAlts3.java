@@ -8,8 +8,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -39,10 +37,10 @@ public class AntiAlts3 extends JavaPlugin {
 		Load_Config(); // Config Load
 	}
 
+	public static MySQLDBManager MySQLDBManager = null;
 	public static String sqlserver = "jaoafa.com";
 	public static String sqluser;
 	public static String sqlpassword;
-	public static Connection c = null;
 	public static long ConnectionCreate = 0;
 	public static FileConfiguration conf;
 
@@ -74,24 +72,19 @@ public class AntiAlts3 extends JavaPlugin {
 			sqlserver = (String) conf.get("sqlserver");
 		}
 
-		MySQL MySQL = new MySQL(sqlserver, "3306", "jaoafa", sqluser, sqlpassword);
-
 		try {
-			c = MySQL.openConnection();
+			MySQLDBManager = new MySQLDBManager(
+					sqlserver,
+					"3306",
+					"jaoafa",
+					sqluser,
+					sqlpassword);
 		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-			getLogger().info("MySQL Connect err. [ClassNotFoundException]");
-			getLogger().info("Disable AntiAlts3...");
-			getServer().getPluginManager().disablePlugin(this);
-			return;
-		} catch (SQLException e) {
-			e.printStackTrace();
-			getLogger().info("MySQL Connect err. [SQLException: " + e.getSQLState() + "]");
-			getLogger().info("Disable AntiAlts3...");
+			getLogger().warning("MySQLへの接続に失敗しました。(MySQL接続するためのクラスが見つかりません)");
+			getLogger().warning("AntiAlts3プラグインを終了します。");
 			getServer().getPluginManager().disablePlugin(this);
 			return;
 		}
-		getLogger().info("MySQL Connect successful.");
 	}
 
 	/**

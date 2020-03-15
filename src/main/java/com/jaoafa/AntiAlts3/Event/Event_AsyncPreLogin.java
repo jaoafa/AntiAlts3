@@ -1,6 +1,7 @@
 package com.jaoafa.AntiAlts3.Event;
 
 import java.net.InetAddress;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -28,7 +29,7 @@ import com.google.common.net.InternetDomainName;
 import com.jaoafa.AntiAlts3.AntiAlts3;
 import com.jaoafa.AntiAlts3.AntiAltsPlayer;
 import com.jaoafa.AntiAlts3.Discord;
-import com.jaoafa.AntiAlts3.MySQL;
+import com.jaoafa.AntiAlts3.MySQLDBManager;
 import com.jaoafa.AntiAlts3.PermissionsManager;
 
 public class Event_AsyncPreLogin implements Listener {
@@ -104,6 +105,11 @@ public class Event_AsyncPreLogin implements Listener {
 		plugin.getLogger().info("DOMAIN: " + domain);
 		if (BaseDomain != null)
 			plugin.getLogger().info("BASEDOMAIN: " + BaseDomain.toString());
+
+		MySQLDBManager MySQLDBManager = AntiAlts3.MySQLDBManager;
+		if (MySQLDBManager == null) {
+			return;
+		}
 
 		// 2. UUIDをMojangAPIから取得
 		UUID uuid = AntiAlts3.getUUID(name);
@@ -224,7 +230,8 @@ public class Event_AsyncPreLogin implements Listener {
 
 		if (isNeedINSERT(uuid, address)) {
 			try {
-				PreparedStatement statement_insert = MySQL.getNewPreparedStatement(
+				Connection conn = MySQLDBManager.getConnection();
+				PreparedStatement statement_insert = conn.prepareStatement(
 						"INSERT INTO antialts_new (player, uuid, userid, ip, host, domain, basedomain, firstlogin, lastlogin, iplastlogin) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)");
 				statement_insert.setString(1, name);
 				statement_insert.setString(2, uuid.toString());
@@ -243,7 +250,7 @@ public class Event_AsyncPreLogin implements Listener {
 					statement_insert.setString(7, null);
 				}
 				statement_insert.executeUpdate();
-			} catch (ClassNotFoundException | SQLException e) {
+			} catch (SQLException e) {
 				AntiAlts3.report(e);
 			}
 		}
@@ -308,7 +315,12 @@ public class Event_AsyncPreLogin implements Listener {
 	@Nonnull
 	int getAntiAltsUserID(UUID uuid) {
 		try {
-			PreparedStatement statement = MySQL.getNewPreparedStatement("SELECT * FROM antialts_new WHERE uuid = ?");
+			MySQLDBManager MySQLDBManager = AntiAlts3.MySQLDBManager;
+			if (MySQLDBManager == null) {
+				return -1;
+			}
+			Connection conn = MySQLDBManager.getConnection();
+			PreparedStatement statement = conn.prepareStatement("SELECT * FROM antialts_new WHERE uuid = ?");
 			statement.setString(1, uuid.toString());
 			ResultSet res = statement.executeQuery();
 			if (res.next()) {
@@ -319,7 +331,7 @@ public class Event_AsyncPreLogin implements Listener {
 				statement.close();
 				return -1;
 			}
-		} catch (ClassNotFoundException | SQLException e) {
+		} catch (SQLException e) {
 			AntiAlts3.report(e);
 			return -1;
 		}
@@ -334,14 +346,19 @@ public class Event_AsyncPreLogin implements Listener {
 	@Nullable
 	String changePlayerID(UUID uuid, String newPlayerID) {
 		try {
-			PreparedStatement statement = MySQL
-					.getNewPreparedStatement("SELECT * FROM antialts_new WHERE uuid = ? AND player != ?");
+			MySQLDBManager MySQLDBManager = AntiAlts3.MySQLDBManager;
+			if (MySQLDBManager == null) {
+				return null;
+			}
+			Connection conn = MySQLDBManager.getConnection();
+			PreparedStatement statement = conn
+					.prepareStatement("SELECT * FROM antialts_new WHERE uuid = ? AND player != ?");
 			statement.setString(1, uuid.toString());
 			statement.setString(2, newPlayerID);
 			ResultSet res = statement.executeQuery();
 			if (res.next()) {
-				PreparedStatement statement_update = MySQL
-						.getNewPreparedStatement("UPDATE antialts_new SET player = ? WHERE uuid = ?");
+				PreparedStatement statement_update = conn
+						.prepareStatement("UPDATE antialts_new SET player = ? WHERE uuid = ?");
 				statement_update.setString(1, newPlayerID);
 				statement_update.setString(2, uuid.toString());
 				statement_update.executeUpdate();
@@ -351,7 +368,7 @@ public class Event_AsyncPreLogin implements Listener {
 			}
 			statement.close();
 			return null;
-		} catch (ClassNotFoundException | SQLException e) {
+		} catch (SQLException e) {
 			AntiAlts3.report(e);
 			return null;
 		}
@@ -363,11 +380,16 @@ public class Event_AsyncPreLogin implements Listener {
 	 */
 	void changeLastLogin(UUID uuid) {
 		try {
-			PreparedStatement statement = MySQL
-					.getNewPreparedStatement("UPDATE antialts_new SET lastlogin = CURRENT_TIMESTAMP WHERE uuid = ?");
+			MySQLDBManager MySQLDBManager = AntiAlts3.MySQLDBManager;
+			if (MySQLDBManager == null) {
+				return;
+			}
+			Connection conn = MySQLDBManager.getConnection();
+			PreparedStatement statement = conn
+					.prepareStatement("UPDATE antialts_new SET lastlogin = CURRENT_TIMESTAMP WHERE uuid = ?");
 			statement.setString(1, uuid.toString());
 			statement.executeUpdate();
-		} catch (ClassNotFoundException | SQLException e) {
+		} catch (SQLException e) {
 			AntiAlts3.report(e);
 		}
 	}
@@ -379,7 +401,12 @@ public class Event_AsyncPreLogin implements Listener {
 	 */
 	boolean isIgnoreUser(UUID uuid) {
 		try {
-			PreparedStatement statement = MySQL.getNewPreparedStatement("SELECT * FROM antialts_ignore WHERE uuid = ?");
+			MySQLDBManager MySQLDBManager = AntiAlts3.MySQLDBManager;
+			if (MySQLDBManager == null) {
+				return false;
+			}
+			Connection conn = MySQLDBManager.getConnection();
+			PreparedStatement statement = conn.prepareStatement("SELECT * FROM antialts_ignore WHERE uuid = ?");
 			statement.setString(1, uuid.toString());
 			ResultSet res = statement.executeQuery();
 			if (res.next()) {
@@ -387,7 +414,7 @@ public class Event_AsyncPreLogin implements Listener {
 			} else {
 				return false;
 			}
-		} catch (ClassNotFoundException | SQLException e) {
+		} catch (SQLException e) {
 			AntiAlts3.report(e);
 			return false;
 		}
@@ -402,7 +429,12 @@ public class Event_AsyncPreLogin implements Listener {
 	AntiAltsPlayer getMainUUID(int AntiAltsUserID) {
 		try {
 			// antialts_mainに登録されている場合、同一AntiAltsUserIDは全てantialts_mainに登録されているアカウントをメインとする。
-			PreparedStatement statement = MySQL.getNewPreparedStatement("SELECT * FROM antialts_main WHERE userid = ?");
+			MySQLDBManager MySQLDBManager = AntiAlts3.MySQLDBManager;
+			if (MySQLDBManager == null) {
+				return null;
+			}
+			Connection conn = MySQLDBManager.getConnection();
+			PreparedStatement statement = conn.prepareStatement("SELECT * FROM antialts_main WHERE userid = ?");
 			statement.setInt(1, AntiAltsUserID);
 			ResultSet res = statement.executeQuery();
 			if (res.next()) {
@@ -414,8 +446,8 @@ public class Event_AsyncPreLogin implements Listener {
 			}
 
 			// そうでない場合、同一AntiAltsUserIDのリストを取得して1番目をメインとする。(idが一番小さいもの)
-			PreparedStatement statement_useridlist = MySQL
-					.getNewPreparedStatement("SELECT * FROM antialts_new WHERE userid = ? ORDER BY id ASC");
+			PreparedStatement statement_useridlist = conn
+					.prepareStatement("SELECT * FROM antialts_new WHERE userid = ? ORDER BY id ASC");
 			statement_useridlist.setInt(1, AntiAltsUserID);
 			ResultSet useridlist_res = statement_useridlist.executeQuery();
 			if (useridlist_res.next()) {
@@ -426,7 +458,7 @@ public class Event_AsyncPreLogin implements Listener {
 				//return Bukkit.getOfflinePlayer(UUID.fromString(useridlist_res.getString("uuid")));
 			}
 			return null;
-		} catch (ClassNotFoundException | SQLException e) {
+		} catch (SQLException e) {
 			AntiAlts3.report(e);
 			return null;
 		}
@@ -440,8 +472,13 @@ public class Event_AsyncPreLogin implements Listener {
 	 */
 	int getIdenticalIPUsersCount(InetAddress address, UUID exceptUUID) {
 		try {
-			PreparedStatement statement = MySQL
-					.getNewPreparedStatement("SELECT COUNT(*) FROM antialts_new WHERE ip = ? AND uuid != ?");
+			MySQLDBManager MySQLDBManager = AntiAlts3.MySQLDBManager;
+			if (MySQLDBManager == null) {
+				return 0;
+			}
+			Connection conn = MySQLDBManager.getConnection();
+			PreparedStatement statement = conn
+					.prepareStatement("SELECT COUNT(*) FROM antialts_new WHERE ip = ? AND uuid != ?");
 			statement.setString(1, address.getHostAddress());
 			statement.setString(2, exceptUUID.toString());
 			ResultSet res = statement.executeQuery();
@@ -449,7 +486,7 @@ public class Event_AsyncPreLogin implements Listener {
 				return res.getInt(1);
 			}
 			return 0;
-		} catch (ClassNotFoundException | SQLException e) {
+		} catch (SQLException e) {
 			AntiAlts3.report(e);
 			return 0;
 		}
@@ -463,9 +500,14 @@ public class Event_AsyncPreLogin implements Listener {
 	 */
 	int getIdenticalIPSmallestID_And_SetID(InetAddress address, UUID exceptUUID) {
 		try {
+			MySQLDBManager MySQLDBManager = AntiAlts3.MySQLDBManager;
+			if (MySQLDBManager == null) {
+				return -1;
+			}
+			Connection conn = MySQLDBManager.getConnection();
 			int AntiAltsUserID = Integer.MAX_VALUE;
-			PreparedStatement statement_sameIP = MySQL
-					.getNewPreparedStatement("SELECT * FROM antialts_new WHERE ip = ? AND uuid != ?");
+			PreparedStatement statement_sameIP = conn
+					.prepareStatement("SELECT * FROM antialts_new WHERE ip = ? AND uuid != ?");
 			statement_sameIP.setString(1, address.getHostAddress());
 			statement_sameIP.setString(2, exceptUUID.toString());
 			ResultSet res_sameIP = statement_sameIP.executeQuery();
@@ -479,15 +521,15 @@ public class Event_AsyncPreLogin implements Listener {
 			}
 			res_sameIP.first();
 			while (res_sameIP.next()) {
-				PreparedStatement statement_updateUserid = MySQL
-						.getNewPreparedStatement("UPDATE antialts_new SET userid = ? WHERE id = ?");
+				PreparedStatement statement_updateUserid = conn
+						.prepareStatement("UPDATE antialts_new SET userid = ? WHERE id = ?");
 				statement_updateUserid.setInt(1, AntiAltsUserID);
 				statement_updateUserid.setInt(2, res_sameIP.getInt("id"));
 				statement_updateUserid.executeUpdate();
 			}
 
 			return AntiAltsUserID;
-		} catch (ClassNotFoundException | SQLException e) {
+		} catch (SQLException e) {
 			AntiAlts3.report(e);
 			return -1;
 		}
@@ -499,9 +541,13 @@ public class Event_AsyncPreLogin implements Listener {
 	 */
 	void setFirstLogin(UUID uuid) {
 		try {
+			MySQLDBManager MySQLDBManager = AntiAlts3.MySQLDBManager;
+			if (MySQLDBManager == null) {
+				return;
+			}
+			Connection conn = MySQLDBManager.getConnection();
 			Timestamp firstlogin = new Timestamp(System.currentTimeMillis());
-			PreparedStatement statement_FirstLogin = MySQL
-					.getNewPreparedStatement("SELECT * FROM antialts_new WHERE uuid = ?");
+			PreparedStatement statement_FirstLogin = conn.prepareStatement("SELECT * FROM antialts_new WHERE uuid = ?");
 			statement_FirstLogin.setString(1, uuid.toString());
 			ResultSet res_FirstLogin = statement_FirstLogin.executeQuery();
 			while (res_FirstLogin.next()) {
@@ -512,13 +558,13 @@ public class Event_AsyncPreLogin implements Listener {
 
 			res_FirstLogin.first();
 			while (res_FirstLogin.next()) {
-				PreparedStatement statement_updatefirstlogin = MySQL
-						.getNewPreparedStatement("UPDATE antialts_new SET firstlogin = ? WHERE id = ?");
+				PreparedStatement statement_updatefirstlogin = conn
+						.prepareStatement("UPDATE antialts_new SET firstlogin = ? WHERE id = ?");
 				statement_updatefirstlogin.setTimestamp(1, firstlogin);
 				statement_updatefirstlogin.setInt(2, res_FirstLogin.getInt("id"));
 				statement_updatefirstlogin.executeUpdate();
 			}
-		} catch (ClassNotFoundException | SQLException e) {
+		} catch (SQLException e) {
 			AntiAlts3.report(e);
 		}
 	}
@@ -529,11 +575,16 @@ public class Event_AsyncPreLogin implements Listener {
 	 */
 	void setLastLogin(UUID uuid) {
 		try {
-			PreparedStatement statement_updatelastlogin = MySQL
-					.getNewPreparedStatement("UPDATE antialts_new SET lastlogin = CURRENT_TIMESTAMP WHERE uuid = ?");
+			MySQLDBManager MySQLDBManager = AntiAlts3.MySQLDBManager;
+			if (MySQLDBManager == null) {
+				return;
+			}
+			Connection conn = MySQLDBManager.getConnection();
+			PreparedStatement statement_updatelastlogin = conn
+					.prepareStatement("UPDATE antialts_new SET lastlogin = CURRENT_TIMESTAMP WHERE uuid = ?");
 			statement_updatelastlogin.setString(1, uuid.toString());
 			statement_updatelastlogin.executeUpdate();
-		} catch (ClassNotFoundException | SQLException e) {
+		} catch (SQLException e) {
 			AntiAlts3.report(e);
 		}
 	}
@@ -544,11 +595,16 @@ public class Event_AsyncPreLogin implements Listener {
 	 */
 	void setIPLastLogin(UUID uuid, InetAddress address) {
 		try {
-			PreparedStatement statement_updatelastlogin = MySQL
-					.getNewPreparedStatement("UPDATE antialts_new SET iplastlogin = CURRENT_TIMESTAMP WHERE ip = ?");
+			MySQLDBManager MySQLDBManager = AntiAlts3.MySQLDBManager;
+			if (MySQLDBManager == null) {
+				return;
+			}
+			Connection conn = MySQLDBManager.getConnection();
+			PreparedStatement statement_updatelastlogin = conn
+					.prepareStatement("UPDATE antialts_new SET iplastlogin = CURRENT_TIMESTAMP WHERE ip = ?");
 			statement_updatelastlogin.setString(1, address.getHostAddress());
 			statement_updatelastlogin.executeUpdate();
-		} catch (ClassNotFoundException | SQLException e) {
+		} catch (SQLException e) {
 			AntiAlts3.report(e);
 		}
 	}
@@ -561,8 +617,13 @@ public class Event_AsyncPreLogin implements Listener {
 	 */
 	boolean isNeedINSERT(UUID uuid, InetAddress address) {
 		try {
-			PreparedStatement statement_selectAlready = MySQL
-					.getNewPreparedStatement("SELECT COUNT(*) FROM antialts_new WHERE uuid = ? AND ip = ?");
+			MySQLDBManager MySQLDBManager = AntiAlts3.MySQLDBManager;
+			if (MySQLDBManager == null) {
+				return true;
+			}
+			Connection conn = MySQLDBManager.getConnection();
+			PreparedStatement statement_selectAlready = conn
+					.prepareStatement("SELECT COUNT(*) FROM antialts_new WHERE uuid = ? AND ip = ?");
 			statement_selectAlready.setString(1, uuid.toString());
 			statement_selectAlready.setString(2, address.getHostAddress());
 			ResultSet res_selectAlready = statement_selectAlready.executeQuery();
@@ -570,7 +631,7 @@ public class Event_AsyncPreLogin implements Listener {
 				return false;
 			}
 			return true;
-		} catch (ClassNotFoundException | SQLException e) {
+		} catch (SQLException e) {
 			AntiAlts3.report(e);
 			return true;
 		}
@@ -582,14 +643,18 @@ public class Event_AsyncPreLogin implements Listener {
 	 */
 	int getLastID() {
 		try {
-			PreparedStatement statement = MySQL
-					.getNewPreparedStatement("SELECT * FROM antialts_new ORDER BY id DESC LIMIT 1");
+			MySQLDBManager MySQLDBManager = AntiAlts3.MySQLDBManager;
+			if (MySQLDBManager == null) {
+				return -1;
+			}
+			Connection conn = MySQLDBManager.getConnection();
+			PreparedStatement statement = conn.prepareStatement("SELECT * FROM antialts_new ORDER BY id DESC LIMIT 1");
 			ResultSet res = statement.executeQuery();
 			if (res.next()) {
 				return res.getInt(1);
 			}
 			return -1;
-		} catch (ClassNotFoundException | SQLException e) {
+		} catch (SQLException e) {
 			AntiAlts3.report(e);
 			return -1;
 		}
@@ -598,8 +663,12 @@ public class Event_AsyncPreLogin implements Listener {
 	@Nonnull
 	Set<AntiAltsPlayer> getUsers(int AntiAltsUserID, UUID exceptUUID) {
 		try {
-			PreparedStatement statement = MySQL
-					.getNewPreparedStatement("SELECT * FROM antialts_new WHERE userid = ?");
+			MySQLDBManager MySQLDBManager = AntiAlts3.MySQLDBManager;
+			if (MySQLDBManager == null) {
+				return new HashSet<>();
+			}
+			Connection conn = MySQLDBManager.getConnection();
+			PreparedStatement statement = conn.prepareStatement("SELECT * FROM antialts_new WHERE userid = ?");
 			statement.setInt(1, AntiAltsUserID);
 			ResultSet res = statement.executeQuery();
 			Set<AntiAltsPlayer> players = new HashSet<>();
@@ -619,7 +688,7 @@ public class Event_AsyncPreLogin implements Listener {
 				players.add(player);
 			}
 			return players;
-		} catch (ClassNotFoundException | SQLException e) {
+		} catch (SQLException e) {
 			AntiAlts3.report(e);
 			return new HashSet<>();
 		}
@@ -628,9 +697,13 @@ public class Event_AsyncPreLogin implements Listener {
 	@Nonnull
 	Set<AntiAltsPlayer> getUsers(InternetDomainName BaseDomain, UUID exceptUUID) {
 		try {
-			PreparedStatement statement = MySQL
-					.getNewPreparedStatement(
-							"SELECT * FROM antialts_new WHERE basedomain = ? AND DATE_ADD(date, INTERVAL 2 DAY) > NOW()");
+			MySQLDBManager MySQLDBManager = AntiAlts3.MySQLDBManager;
+			if (MySQLDBManager == null) {
+				return new HashSet<>();
+			}
+			Connection conn = MySQLDBManager.getConnection();
+			PreparedStatement statement = conn.prepareStatement(
+					"SELECT * FROM antialts_new WHERE basedomain = ? AND DATE_ADD(date, INTERVAL 2 DAY) > NOW()");
 			statement.setString(1, BaseDomain.toString());
 			ResultSet res = statement.executeQuery();
 			Set<AntiAltsPlayer> players = new HashSet<>();
@@ -650,7 +723,7 @@ public class Event_AsyncPreLogin implements Listener {
 				players.add(player);
 			}
 			return players;
-		} catch (ClassNotFoundException | SQLException e) {
+		} catch (SQLException e) {
 			AntiAlts3.report(e);
 			return new HashSet<>();
 		}
