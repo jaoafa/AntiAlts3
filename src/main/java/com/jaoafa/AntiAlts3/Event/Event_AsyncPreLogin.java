@@ -193,7 +193,7 @@ public class Event_AsyncPreLogin implements Listener {
 			// AntiAltsUserIDが一緒になるべき / 一番小さいAntiAltsUserIDへ変更
 			int i = getIdenticalIPSmallestID_And_SetID(address, uuid);
 			plugin.getLogger().info("getIdenticalIPSmallestID_And_SetID: " + i);
-			if (i == -1) {
+			if (i != -1) {
 				AntiAltsUserID = i;
 				plugin.getLogger().info("change AntiAltsUserID: " + AntiAltsUserID);
 			}
