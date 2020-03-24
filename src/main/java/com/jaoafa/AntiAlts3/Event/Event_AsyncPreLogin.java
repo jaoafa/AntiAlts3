@@ -697,6 +697,9 @@ public class Event_AsyncPreLogin implements Listener {
 	@Nonnull
 	Set<AntiAltsPlayer> getUsers(InternetDomainName BaseDomain, UUID exceptUUID) {
 		try {
+			if (BaseDomain == null) {
+				return new HashSet<>();
+			}
 			MySQLDBManager MySQLDBManager = AntiAlts3.MySQLDBManager;
 			if (MySQLDBManager == null) {
 				return new HashSet<>();
