@@ -1,6 +1,6 @@
 name: ${project.artifactId}
 main: com.jaoafa.AntiAlts3.AntiAlts3
-version: ${project.version}
+version: 2020.03.25_04.32
 description: サブアカウントのログイン関連を制御するプラグイン
 database: true
 softdepend: [PermissionsEx, LuckPerms]
