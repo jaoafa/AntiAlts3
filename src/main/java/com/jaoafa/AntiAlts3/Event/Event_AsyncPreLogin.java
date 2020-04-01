@@ -181,7 +181,7 @@ public class Event_AsyncPreLogin implements Listener {
 				}
 			}
 			Discord.send("597423444501463040",
-					"__**[AntiAlts3]**__ `" + name + "`: サブアカウントログイン規制(1 - メイン: " + MainAltID + ")");
+					"__**[AntiAlts3]**__ `" + name + "`: サブアカウントログイン規制(1 - メイン: `" + MainAltID + "`)");
 			loginOK = false;
 			plugin.getLogger().info("Login disallowed.");
 		}
@@ -224,7 +224,7 @@ public class Event_AsyncPreLogin implements Listener {
 					}
 				}
 				Discord.send("597423444501463040",
-						"__**[AntiAlts3]**__ `" + name + "`: サブアカウントログイン規制(2 - メイン: " + IdenticalIPMainAltID + ")");
+						"__**[AntiAlts3]**__ `" + name + "`: サブアカウントログイン規制(2 - メイン: `" + IdenticalIPMainAltID + "`)");
 			}
 		}
 
@@ -281,7 +281,7 @@ public class Event_AsyncPreLogin implements Listener {
 			}
 			Discord.send("619637580987760656", "__**[AntiAlts3]**__ `" + name + "` : - : サブアカウント情報\n"
 					+ "このプレイヤーには、以下、" + IdenticalUserIDPlayers.size() + "個のアカウントが見つかっています。\n"
-					+ String.join(", ", names));
+					+ "`" + String.join(", ", names) + "`");
 		}
 
 		// 11. 同一ドメインの非同一UUIDで、48h以内にラストログインしたプレイヤーをリスト化。管理部・モデレーターに出力
@@ -303,7 +303,7 @@ public class Event_AsyncPreLogin implements Listener {
 					"__**[AntiAlts3]**__ `" + name + "` : - : 同一ベースドメイン情報 (`" + BaseDomain.toString() + "`)\n"
 							+ "このプレイヤードメインと同一のプレイヤーが" + IdenticalBaseDomainPlayers.size()
 							+ "個見つかっています。\n"
-							+ String.join(", ", names));
+							+ "`" + String.join(", ", names) + "`");
 		}
 	}
 
