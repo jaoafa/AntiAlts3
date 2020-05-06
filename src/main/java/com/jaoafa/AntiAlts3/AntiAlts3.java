@@ -156,10 +156,10 @@ public class AntiAlts3 extends JavaPlugin {
 			Request request = new Request.Builder().url(address).get().build();
 			Response response = client.newCall(request).execute();
 			if (response.code() != 200) {
+				System.out.println("[AntiAlts3] URLGetConnected(Error): " + address);
+				System.out.println("[AntiAlts3] ResponseCode: " + response.code());
 				if (response.body() != null) {
-					System.out.println("[AntiAlts3] URLGetConnected(Error): " + address);
-					System.out.println("[AntiAlts3] Response: " + response.code());
-					report(new IOException(response.body().string()));
+					System.out.println("[AntiAlts3] Response: " + response.body().string());
 				}
 				return null;
 			}
