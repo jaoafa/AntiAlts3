@@ -113,6 +113,13 @@ public class Event_AsyncPreLogin implements Listener {
 
 		// 2. UUIDをMojangAPIから取得
 		UUID uuid = AntiAlts3.getUUID(name);
+		if (uuid != null) {
+			uuid = AntiAlts3.getUUIDByDB(name);
+			plugin.getLogger().info("The uuid was getted from DB.");
+		} else {
+			plugin.getLogger().info("The uuid was getted from Mojang API.");
+		}
+		plugin.getLogger().info("UUID: " + uuid.toString());
 
 		// 3. UUIDが合致するデータ(プレイヤーデータ)がantialtsのデータベーステーブルにあるかどうか調べる。あればAntiAltsUserID取得
 		int AntiAltsUserID = getAntiAltsUserID(uuid);

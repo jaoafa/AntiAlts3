@@ -1,13 +1,8 @@
 package com.jaoafa.AntiAlts3;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -17,11 +12,15 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import com.jaoafa.AntiAlts3.Command.Cmd_Alts;
 import com.jaoafa.AntiAlts3.Event.Event_AsyncPreLogin;
+
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 public class AntiAlts3 extends JavaPlugin {
 	/**
@@ -123,8 +122,8 @@ public class AntiAlts3 extends JavaPlugin {
 		JSONObject json = getHttpJson("https://api.mojang.com/users/profiles/minecraft/" + name);
 		if (json == null) {
 			return null;
-		} else if (json.containsKey("id")) {
-			String uuid_hyphenated = new StringBuilder((String) json.get("id"))
+		} else if (json.has("id")) {
+			String uuid_hyphenated = new StringBuilder(json.getString("id"))
 					.insert(8, "-")
 					.insert(13, "-")
 					.insert(18, "-")
@@ -137,49 +136,38 @@ public class AntiAlts3 extends JavaPlugin {
 		}
 	}
 
+	public static UUID getUUIDByDB(String name) {
+		JSONObject json = getHttpJson("https://api.jaoafa.com/users/" + name);
+		if (json == null) {
+			return null;
+		} else if (json.has("data")) {
+			String uuid_hyphenated = new StringBuilder(json.getJSONObject("data").getString("uuid"))
+					.toString();
+			UUID uuid = UUID.fromString(uuid_hyphenated);
+			return uuid;
+		} else {
+			return null;
+		}
+	}
+
 	private static JSONObject getHttpJson(String address) {
-		StringBuilder builder = new StringBuilder();
 		try {
-			URL url = new URL(address);
-
-			HttpURLConnection connect = (HttpURLConnection) url.openConnection();
-			connect.setRequestMethod("GET");
-			connect.connect();
-
-			if (connect.getResponseCode() != HttpURLConnection.HTTP_OK) {
-				InputStream in = connect.getErrorStream();
-
-				BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-				String line;
-				while ((line = reader.readLine()) != null) {
-					builder.append(line);
+			OkHttpClient client = new OkHttpClient();
+			Request request = new Request.Builder().url(address).get().build();
+			Response response = client.newCall(request).execute();
+			if (response.code() != 200) {
+				if (response.body() != null) {
+					System.out.println("[AntiAlts3] URLGetConnected(Error): " + address);
+					System.out.println("[AntiAlts3] Response: " + response.code());
+					report(new IOException(response.body().string()));
 				}
-				in.close();
-				connect.disconnect();
-
-				System.out.println("[AntiAlts3] URLGetConnected(Error): " + address);
-				System.out.println("[AntiAlts3] Response: " + connect.getResponseMessage());
-				report(new IOException(builder.toString()));
 				return null;
 			}
-
-			InputStream in = connect.getInputStream();
-
-			BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-			String line;
-			while ((line = reader.readLine()) != null) {
-				builder.append(line);
-			}
-			in.close();
-			connect.disconnect();
-			System.out.println("[AntiAlts3] URLGetConnected: " + address);
-			System.out.println("[AntiAlts3] Data: " + builder.toString());
-			JSONParser parser = new JSONParser();
-			Object obj = parser.parse(builder.toString());
-			JSONObject json = (JSONObject) obj;
-			return json;
-		} catch (Exception e) {
-			report(e);
+			JSONObject obj = new JSONObject(response.body().string());
+			response.close();
+			return obj;
+		} catch (IOException | JSONException e) {
+			e.printStackTrace();
 			return null;
 		}
 	}
