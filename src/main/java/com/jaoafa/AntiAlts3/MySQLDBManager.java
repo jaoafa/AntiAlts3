@@ -29,7 +29,7 @@ public class MySQLDBManager {
 	public Connection getConnection() throws SQLException {
 		if (conn != null && !conn.isClosed() && conn.isValid(5)) {
 			if (WAIT_TIMEOUT != -1 && LAST_PACKET != -1) {
-				long diff = System.currentTimeMillis() - LAST_PACKET;
+				long diff = (System.currentTimeMillis() - LAST_PACKET) / 1000;
 				if (diff < WAIT_TIMEOUT) {
 					return conn;
 				} else {
