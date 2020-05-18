@@ -139,7 +139,7 @@ public class Event_AsyncPreLogin implements Listener {
 					}
 				}
 				Discord.send("597423444501463040", "__**[AntiAlts3]**__ `" + name + "` : - : プレイヤー名変更情報\n"
-						+ "このプレイヤーは、前回ログインからプレイヤー名を変更しています。(旧名: " + oldName + ")\n"
+						+ "このプレイヤーは、前回ログインからプレイヤー名を変更しています。(旧名: `" + oldName + "`)\n"
 						+ "https://ja.namemc.com/profile/" + uuid.toString());
 
 				// 5. データベースのプレイヤーデータのLastLogin更新
