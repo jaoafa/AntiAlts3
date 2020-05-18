@@ -1,27 +1,22 @@
 package com.jaoafa.AntiAlts3;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.event.server.PluginEnableEvent;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.java.JavaPlugin;
 
-import me.lucko.luckperms.LuckPerms;
-import me.lucko.luckperms.api.Group;
-import me.lucko.luckperms.api.LuckPermsApi;
-import me.lucko.luckperms.api.User;
-import ru.tehkode.permissions.bukkit.PermissionsEx;
+import net.luckperms.api.LuckPerms;
+import net.luckperms.api.LuckPermsProvider;
+import net.luckperms.api.model.group.Group;
+import net.luckperms.api.model.user.User;
 
 public class PermissionsManager implements Listener {
 	/**
@@ -35,15 +30,13 @@ public class PermissionsManager implements Listener {
 
 	private static PermissionsPlugin SelectPermissionsPlugin = null;
 
-	JavaPlugin plugin;
-	public PermissionsManager(JavaPlugin plugin){
-		this.plugin = plugin;
-		try{
+	public static void first() {
+		try {
 			checkPermissionsPluginAutoSelecter();
-		}catch(UnsupportedOperationException e){
+		} catch (UnsupportedOperationException e) {
 			e.printStackTrace();
 			Bukkit.getLogger().warning("権限管理プラグインが見つからないため、プラグインを停止します。");
-			Bukkit.getServer().getPluginManager().disablePlugin(this.plugin);
+			Bukkit.getServer().getPluginManager().disablePlugin(AntiAlts3.getJavaPlugin());
 		}
 	}
 
@@ -51,30 +44,30 @@ public class PermissionsManager implements Listener {
 	 * 権限管理プラグインの動作状態を確認し、使用するプラグインを自動選択する
 	 * @throws UnsupportedOperationException 権限管理プラグインが見つからない場合に発生
 	 */
-	public static void checkPermissionsPluginAutoSelecter() throws UnsupportedOperationException{
+	public static void checkPermissionsPluginAutoSelecter() throws UnsupportedOperationException {
 		Bukkit.getLogger().info("権限管理プラグインの自動選択を行います。");
 
 		Plugin PermissionsEx = Bukkit.getServer().getPluginManager().getPlugin("PermissionsEx");
 		Plugin LuckPerms = Bukkit.getServer().getPluginManager().getPlugin("LuckPerms");
 
-		if(PermissionsEx != null && PermissionsEx.isEnabled()){
+		if (PermissionsEx != null && PermissionsEx.isEnabled()) {
 			PermissionsExStatus = true;
 			Bukkit.getLogger().info("PermissionsExが動作しています。");
 		}
-		if(LuckPerms != null && LuckPerms.isEnabled()){
+		if (LuckPerms != null && LuckPerms.isEnabled()) {
 			LuckPermsStatus = true;
 			Bukkit.getLogger().info("LuckPermsが動作しています。");
 		}
 
-		if(PermissionsExStatus){
+		if (PermissionsExStatus) {
 			// PermissionsExが動作している
 			SelectPermissionsPlugin = PermissionsPlugin.PermissionsEx; // PermissionsExを使う。
 			Bukkit.getLogger().info("PermissionsExを自動選択しました！");
-		}else if(LuckPermsStatus){
+		} else if (LuckPermsStatus) {
 			// LuckPermsが動作している
 			SelectPermissionsPlugin = PermissionsPlugin.LuckPerms; // PermissionsExを使う。
 			Bukkit.getLogger().info("LuckPermsを自動選択しました！");
-		}else{
+		} else {
 			throw new UnsupportedOperationException("権限管理プラグインが見つからないため、自動選択ができません！");
 		}
 	}
@@ -82,17 +75,18 @@ public class PermissionsManager implements Listener {
 	/**
 	 * 権限管理プラグインの動作状態を確認する
 	 */
-	public static boolean checkPermissionsPlugin() throws UnsupportedOperationException{
+	public static boolean checkPermissionsPlugin() throws UnsupportedOperationException {
 		// 権限管理プラグインが自動選択されてなかったら、自動選択する。
-		if(SelectPermissionsPlugin == null) checkPermissionsPluginAutoSelecter();
+		if (SelectPermissionsPlugin == null)
+			checkPermissionsPluginAutoSelecter();
 
 		Plugin PermissionsEx = Bukkit.getServer().getPluginManager().getPlugin("PermissionsEx");
 		Plugin LuckPerms = Bukkit.getServer().getPluginManager().getPlugin("LuckPerms");
-		if(isSelectPermissionsPlugin(PermissionsPlugin.PermissionsEx)){
+		if (isSelectPermissionsPlugin(PermissionsPlugin.PermissionsEx)) {
 			return (PermissionsEx != null && PermissionsEx.isEnabled());
-		}else if(isSelectPermissionsPlugin(PermissionsPlugin.LuckPerms)){
+		} else if (isSelectPermissionsPlugin(PermissionsPlugin.LuckPerms)) {
 			return (LuckPerms != null && LuckPerms.isEnabled());
-		}else{
+		} else {
 			throw new UnsupportedOperationException("権限管理プラグインが見つかりません！");
 		}
 	}
@@ -104,38 +98,44 @@ public class PermissionsManager implements Listener {
 	 * @throws UnsupportedOperationException 権限管理プラグインが見つからないときに発生
 	 * @throws IllegalArgumentException プレイヤーが見つからないときに発生
 	 */
-	public static List<String> getPermissionGroupList(@Nonnull String player) throws UnsupportedOperationException, IllegalArgumentException{
+	public static List<String> getPermissionGroupList(OfflinePlayer player)
+			throws UnsupportedOperationException, IllegalArgumentException {
 		// 権限管理プラグインが自動選択されてなかったら、自動選択する。
-		if(SelectPermissionsPlugin == null) checkPermissionsPluginAutoSelecter();
+		if (SelectPermissionsPlugin == null)
+			checkPermissionsPluginAutoSelecter();
 
-		if(isSelectPermissionsPlugin(PermissionsPlugin.PermissionsEx)){
-			if(!checkPermissionsPlugin()){
+		if (isSelectPermissionsPlugin(PermissionsPlugin.PermissionsEx)) {
+			if (!checkPermissionsPlugin()) {
 				// プラグインが動作していない
 				throw new UnsupportedOperationException("権限管理プラグインが見つかりません！");
 			}
-			List<String> list = new ArrayList<String>();
+			/*List<String> list = new ArrayList<>();
 			Collection<String> groups = PermissionsEx.getPermissionManager().getGroupNames();
 			for(String group : groups){
 				if(PermissionsEx.getUser(player).inGroup(group)){
 					list.add(group);
 				}
 			}
-			return list;
-		}else if(isSelectPermissionsPlugin(PermissionsPlugin.LuckPerms)){
-			if(!checkPermissionsPlugin()){
+			return list;*/
+			throw new IllegalStateException("PermissionsEx非対応");
+		} else if (isSelectPermissionsPlugin(PermissionsPlugin.LuckPerms)) {
+			if (!checkPermissionsPlugin()) {
 				// プラグインが動作していない
 				throw new UnsupportedOperationException("権限管理プラグインが見つかりません！");
 			}
-			LuckPermsApi LPApi = LuckPerms.getApi();
-			User LPplayer = LPApi.getUser(player);
-			if(LPplayer == null){
+			LuckPerms LPApi = LuckPermsProvider.get();
+			User LPplayer = LPApi.getUserManager().getUser(player.getUniqueId());
+			if (LPplayer == null) {
 				throw new IllegalArgumentException("指定されたプレイヤーは見つかりません。");
 			}
-			List<String> list = new ArrayList<String>();
-			String group = LPplayer.getPrimaryGroup();
-			list.add(group);
+			List<String> list = new ArrayList<>();
+			String groupname = LPplayer.getPrimaryGroup();
+			Group group = LPApi.getGroupManager().getGroup(groupname);
+			if (group == null)
+				throw new InternalError("Groupがnullです。");
+			list.add(group.getFriendlyName());
 			return list;
-		}else{
+		} else {
 			throw new UnsupportedOperationException("権限管理プラグインが選択されていません！");
 		}
 	}
@@ -147,43 +147,69 @@ public class PermissionsManager implements Listener {
 	 * @throws UnsupportedOperationException 権限管理プラグインが見つからないときに発生
 	 * @throws IllegalArgumentException プレイヤーが見つからないときに発生
 	 */
-	public static List<String> getPermissionGroupList(Player player) throws UnsupportedOperationException, IllegalArgumentException{
+	public static List<String> getPermissionGroupList(Player player)
+			throws UnsupportedOperationException, IllegalArgumentException {
 		// 権限管理プラグインが自動選択されてなかったら、自動選択する。
-		if(SelectPermissionsPlugin == null) checkPermissionsPluginAutoSelecter();
-		if(player == null) throw new InternalError("オンラインプレイヤーがnullです。");
+		if (SelectPermissionsPlugin == null)
+			checkPermissionsPluginAutoSelecter();
+		if (player == null)
+			throw new InternalError("オンラインプレイヤーがnullです。");
 
-		if(isSelectPermissionsPlugin(PermissionsPlugin.PermissionsEx)){
-			if(!checkPermissionsPlugin()){
+		if (isSelectPermissionsPlugin(PermissionsPlugin.PermissionsEx)) {
+			if (!checkPermissionsPlugin()) {
 				// プラグインが動作していない
 				throw new UnsupportedOperationException("権限管理プラグインが見つかりません！");
 			}
-			List<String> list = new ArrayList<String>();
+			/*
+			List<String> list = new ArrayList<>();
 			Collection<String> groups = PermissionsEx.getPermissionManager().getGroupNames();
-			for(String group : groups){
-				if(PermissionsEx.getUser(player).inGroup(group)){
+			for (String group : groups) {
+				if (PermissionsEx.getUser(player).inGroup(group)) {
 					list.add(group);
 				}
 			}
-			return list;
-		}else if(isSelectPermissionsPlugin(PermissionsPlugin.LuckPerms)){
-			if(!checkPermissionsPlugin()){
+			return list;*/
+			throw new IllegalStateException("PermissionsEx非対応");
+		} else if (isSelectPermissionsPlugin(PermissionsPlugin.LuckPerms)) {
+			if (!checkPermissionsPlugin()) {
 				// プラグインが動作していない
 				throw new UnsupportedOperationException("権限管理プラグインが見つかりません！");
 			}
-			LuckPermsApi LPApi = LuckPerms.getApi();
+			LuckPerms LPApi = LuckPermsProvider.get();
 			UUID uuid = player.getUniqueId();
-			if(uuid == null) throw new InternalError("オンラインプレイヤーのUUIDがnullです。");
-			User LPplayer = LPApi.getUser(uuid);
-			if(LPplayer == null){
+			if (uuid == null)
+				throw new InternalError("オンラインプレイヤーのUUIDがnullです。");
+			User LPplayer = LPApi.getUserManager().getUser(player.getUniqueId());
+			if (LPplayer == null) {
 				throw new IllegalArgumentException("指定されたプレイヤーは見つかりません。");
 			}
-			List<String> list = new ArrayList<String>();
-			String group = LPplayer.getPrimaryGroup();
-			list.add(group);
+			List<String> list = new ArrayList<>();
+			String groupname = LPplayer.getPrimaryGroup();
+			Group group = LPApi.getGroupManager().getGroup(groupname);
+			if (group == null)
+				throw new InternalError("Groupがnullです。");
+			list.add(group.getFriendlyName());
 			return list;
-		}else{
+		} else {
 			throw new UnsupportedOperationException("権限管理プラグインが選択されていません！");
 		}
+	}
+
+	public static String getPermissionMainGroup(String player)
+			throws UnsupportedOperationException, IllegalArgumentException {
+		@SuppressWarnings("deprecation")
+		OfflinePlayer offplayer = Bukkit.getOfflinePlayer(player);
+		if (offplayer == null)
+			throw new IllegalArgumentException("Player not found.");
+		return getPermissionMainGroup(offplayer);
+	}
+
+	public static String getPermissionMainGroup(UUID uuid)
+			throws UnsupportedOperationException, IllegalArgumentException {
+		OfflinePlayer offplayer = Bukkit.getOfflinePlayer(uuid);
+		if (offplayer == null)
+			throw new IllegalArgumentException("Player not found.");
+		return getPermissionMainGroup(offplayer);
 	}
 
 	/**
@@ -193,40 +219,47 @@ public class PermissionsManager implements Listener {
 	 * @throws UnsupportedOperationException 権限管理プラグインが見つからないときに発生
 	 * @throws IllegalArgumentException プレイヤーが見つからないときに発生
 	 */
-	@Nullable
-	public static String getPermissionMainGroup(@Nonnull String player) throws UnsupportedOperationException, IllegalArgumentException{
+	public static String getPermissionMainGroup(OfflinePlayer player)
+			throws UnsupportedOperationException, IllegalArgumentException {
 		// 権限管理プラグインが自動選択されてなかったら、自動選択する。
-		if(SelectPermissionsPlugin == null) checkPermissionsPluginAutoSelecter();
+		if (SelectPermissionsPlugin == null)
+			checkPermissionsPluginAutoSelecter();
 
-		if(isSelectPermissionsPlugin(PermissionsPlugin.PermissionsEx)){
-			if(!checkPermissionsPlugin()){
+		if (isSelectPermissionsPlugin(PermissionsPlugin.PermissionsEx)) {
+			if (!checkPermissionsPlugin()) {
 				// プラグインが動作していない
 				throw new UnsupportedOperationException("権限管理プラグインが見つかりません！");
 			}
+			/*
 			Collection<String> groups = PermissionsEx.getPermissionManager().getGroupNames();
 			String MaxGroup = null; // ?
-			for(String group : groups){
-				if(PermissionsEx.getUser(player).inGroup(group)){
+			for (String group : groups) {
+				if (PermissionsEx.getUser(player).inGroup(group)) {
 					MaxGroup = group;
 				}
 			}
 			return MaxGroup;
-		}else if(isSelectPermissionsPlugin(PermissionsPlugin.LuckPerms)){
-			if(!checkPermissionsPlugin()){
+			*/
+			throw new IllegalStateException("PermissionsEx非対応");
+		} else if (isSelectPermissionsPlugin(PermissionsPlugin.LuckPerms)) {
+			if (!checkPermissionsPlugin()) {
 				// プラグインが動作していない
 				throw new UnsupportedOperationException("権限管理プラグインが見つかりません！");
 			}
-			LuckPermsApi LPApi = LuckPerms.getApi();
-			User LPplayer = LPApi.getUser(player);
-			if(LPplayer == null){
+			LuckPerms LPApi = LuckPermsProvider.get();
+			UUID uuid = player.getUniqueId();
+			if (uuid == null)
+				throw new InternalError("オンラインプレイヤーのUUIDがnullです。");
+			User LPplayer = LPApi.getUserManager().getUser(player.getUniqueId());
+			if (LPplayer == null) {
 				throw new IllegalArgumentException("指定されたプレイヤーは見つかりません。");
 			}
 			String groupname = LPplayer.getPrimaryGroup();
-			Group group = LPApi.getGroup(groupname);
-			if(group == null) throw new InternalError("Groupがnullです。");
-
+			Group group = LPApi.getGroupManager().getGroup(groupname);
+			if (group == null)
+				throw new InternalError("Groupがnullです。");
 			return group.getFriendlyName();
-		}else{
+		} else {
 			throw new UnsupportedOperationException("権限管理プラグインが選択されていません！");
 		}
 	}
@@ -239,136 +272,175 @@ public class PermissionsManager implements Listener {
 	 * @throws IllegalArgumentException
 	 * @throws InternalError
 	 */
-	public static String getPermissionMainGroup(Player player) throws UnsupportedOperationException, IllegalArgumentException, InternalError{
+	public static String getPermissionMainGroup(Player player)
+			throws UnsupportedOperationException, IllegalArgumentException, InternalError {
 		// 権限管理プラグインが自動選択されてなかったら、自動選択する。
-		if(SelectPermissionsPlugin == null) checkPermissionsPluginAutoSelecter();
+		if (SelectPermissionsPlugin == null)
+			checkPermissionsPluginAutoSelecter();
 
-		if(player == null) throw new InternalError("オンラインプレイヤーがnullです。");
+		if (player == null)
+			throw new InternalError("オンラインプレイヤーがnullです。");
 
-		if(isSelectPermissionsPlugin(PermissionsPlugin.PermissionsEx)){
-			if(!checkPermissionsPlugin()){
+		if (isSelectPermissionsPlugin(PermissionsPlugin.PermissionsEx)) {
+			if (!checkPermissionsPlugin()) {
 				// プラグインが動作していない
 				throw new UnsupportedOperationException("権限管理プラグインが見つかりません！");
 			}
-			Collection<String> groups = PermissionsEx.getPermissionManager().getGroupNames();
-			String MaxGroup = null; // ?
-			for(String group : groups){
-				if(PermissionsEx.getUser(player).inGroup(group)){
-					MaxGroup = group;
-				}
-			}
-			return MaxGroup;
-		}else if(isSelectPermissionsPlugin(PermissionsPlugin.LuckPerms)){
-			if(!checkPermissionsPlugin()){
+			throw new IllegalStateException("PermissionsEx非対応");
+		} else if (isSelectPermissionsPlugin(PermissionsPlugin.LuckPerms)) {
+			if (!checkPermissionsPlugin()) {
 				// プラグインが動作していない
 				throw new UnsupportedOperationException("権限管理プラグインが見つかりません！");
 			}
-			LuckPermsApi LPApi = LuckPerms.getApi();
+			LuckPerms LPApi = LuckPermsProvider.get();
 			UUID uuid = player.getUniqueId();
-			if(uuid == null) throw new InternalError("オンラインプレイヤーのUUIDがnullです。");
-			User LPplayer = LPApi.getUser(uuid);
-			if(LPplayer == null){
+			if (uuid == null)
+				throw new InternalError("オンラインプレイヤーのUUIDがnullです。");
+			User LPplayer = LPApi.getUserManager().getUser(player.getUniqueId());
+			if (LPplayer == null) {
 				throw new IllegalArgumentException("指定されたプレイヤーは見つかりません。");
 			}
 			String groupname = LPplayer.getPrimaryGroup();
-			Group group = LPApi.getGroup(groupname);
-			if(group == null) throw new InternalError("Groupがnullです。");
+			Group group = LPApi.getGroupManager().getGroup(groupname);
+			if (group == null)
+				throw new InternalError("Groupがnullです。");
 			return group.getFriendlyName();
-		}else{
+		} else {
 			throw new UnsupportedOperationException("権限管理プラグインが選択されていません！");
 		}
 	}
 
-	public static void setPermissionsGroup(Player player, String group){
+	public static void setPermissionsGroup(Player player, String groupname) {
 		// 権限管理プラグインが自動選択されてなかったら、自動選択する。
-		if(SelectPermissionsPlugin == null) checkPermissionsPluginAutoSelecter();
+		if (SelectPermissionsPlugin == null)
+			checkPermissionsPluginAutoSelecter();
 
-		if(player == null) throw new InternalError("オンラインプレイヤーがnullです。");
-		if(group == null) throw new InternalError("グループ名がnullです。");
+		if (player == null)
+			throw new InternalError("オンラインプレイヤーがnullです。");
+		if (groupname == null)
+			throw new InternalError("グループ名がnullです。");
 
-		if(isSelectPermissionsPlugin(PermissionsPlugin.PermissionsEx)){
-			if(!checkPermissionsPlugin()){
+		if (isSelectPermissionsPlugin(PermissionsPlugin.PermissionsEx)) {
+			if (!checkPermissionsPlugin()) {
 				// プラグインが動作していない
 				throw new UnsupportedOperationException("権限管理プラグインが見つかりません！");
 			}
-			Collection<String> groups = PermissionsEx.getPermissionManager().getGroupNames();
-			for(String g : groups){
-				if(PermissionsEx.getUser(player).inGroup(g)){
-					PermissionsEx.getUser(player).removeGroup(g);
-				}
-			}
-			PermissionsEx.getUser(player).addGroup(group);
-		}else if(isSelectPermissionsPlugin(PermissionsPlugin.LuckPerms)){
-			if(!checkPermissionsPlugin()){
+			throw new IllegalStateException("PermissionsEx非対応");
+		} else if (isSelectPermissionsPlugin(PermissionsPlugin.LuckPerms)) {
+			if (!checkPermissionsPlugin()) {
 				// プラグインが動作していない
 				throw new UnsupportedOperationException("権限管理プラグインが見つかりません！");
 			}
-			LuckPermsApi LPApi = LuckPerms.getApi();
+			LuckPerms LPApi = LuckPermsProvider.get();
 			UUID uuid = player.getUniqueId();
-			if(uuid == null) throw new InternalError("オンラインプレイヤーのUUIDがnullです。");
-			User LPplayer = LPApi.getUser(uuid);
-			if(LPplayer == null){
+			if (uuid == null)
+				throw new InternalError("オンラインプレイヤーのUUIDがnullです。");
+			User LPplayer = LPApi.getUserManager().getUser(player.getUniqueId());
+			if (LPplayer == null) {
 				throw new IllegalArgumentException("指定されたプレイヤーは見つかりません。");
 			}
-			// APIを使ってグループにプレイヤーを入れる方法がわからない。なのでかなり無茶苦茶
-			Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "lp user " + player.getName() + " parent set " + group);
-			/*
-			LPplayer.clearParents();
-			LPplayer.setPrimaryGroup(group);
-			*/
+			Group group = LPApi.getGroupManager().getGroup(groupname);
+			if (group == null) {
+				throw new InternalError("Groupがnullです。");
+			}
+			LPplayer.setPrimaryGroup(groupname);
 		}
 	}
 
-	public static PermissionsPlugin getSelectPermissionsPlugin(){
+	public static void setPermissionsGroup(String uuidstr, String group) {
 		// 権限管理プラグインが自動選択されてなかったら、自動選択する。
-		if(SelectPermissionsPlugin == null) checkPermissionsPluginAutoSelecter();
+		if (SelectPermissionsPlugin == null)
+			checkPermissionsPluginAutoSelecter();
+
+		if (uuidstr == null)
+			throw new InternalError("uuidstrがnullです。");
+		if (group == null)
+			throw new InternalError("グループ名がnullです。");
+
+		if (isSelectPermissionsPlugin(PermissionsPlugin.PermissionsEx)) {
+			if (!checkPermissionsPlugin()) {
+				// プラグインが動作していない
+				throw new UnsupportedOperationException("権限管理プラグインが見つかりません！");
+			}
+			throw new IllegalStateException("PermissionsEx非対応");
+		} else if (isSelectPermissionsPlugin(PermissionsPlugin.LuckPerms)) {
+			if (!checkPermissionsPlugin()) {
+				// プラグインが動作していない
+				throw new UnsupportedOperationException("権限管理プラグインが見つかりません！");
+			}
+			LuckPerms LPApi = LuckPermsProvider.get();
+			User LPplayer = null;
+			try {
+				UUID uuid = UUID.fromString(uuidstr);
+				if (uuid == null)
+					throw new InternalError("オンラインプレイヤーのUUIDがnullです。");
+				LPplayer = LPApi.getUserManager().getUser(uuid);
+			} catch (IllegalArgumentException e) {
+			}
+			if (LPplayer == null) {
+				LPplayer = LPApi.getUserManager().getUser(uuidstr);
+				if (LPplayer == null) {
+					throw new IllegalArgumentException("指定されたプレイヤーは見つかりません。");
+				}
+			}
+			LPplayer.setPrimaryGroup(group);
+		}
+	}
+
+	public static PermissionsPlugin getSelectPermissionsPlugin() {
+		// 権限管理プラグインが自動選択されてなかったら、自動選択する。
+		if (SelectPermissionsPlugin == null)
+			checkPermissionsPluginAutoSelecter();
 
 		return SelectPermissionsPlugin;
 	}
 
-	public static boolean isSelectPermissionsPlugin(PermissionsPlugin plugin){
+	public static boolean isSelectPermissionsPlugin(PermissionsPlugin plugin) {
 		// 権限管理プラグインが自動選択されてなかったら、自動選択する。
-		if(SelectPermissionsPlugin == null) checkPermissionsPluginAutoSelecter();
+		if (SelectPermissionsPlugin == null)
+			checkPermissionsPluginAutoSelecter();
 
 		return plugin == SelectPermissionsPlugin;
 	}
 
 	@EventHandler
-	public void PluginEnable(PluginEnableEvent event){
+	public void PluginEnable(PluginEnableEvent event) {
 		Plugin plugin = event.getPlugin();
-		if(plugin == null) return;
-		if(!plugin.getName().equalsIgnoreCase("PermissionsEx") || !plugin.getName().equalsIgnoreCase("LuckPerms")){
+		if (plugin == null)
+			return;
+		if (!plugin.getName().equalsIgnoreCase("PermissionsEx") || !plugin.getName().equalsIgnoreCase("LuckPerms")) {
 			return;
 		}
-		try{
+		try {
 			checkPermissionsPluginAutoSelecter();
-		}catch(UnsupportedOperationException e){
+		} catch (UnsupportedOperationException e) {
 			e.printStackTrace();
 			Bukkit.getLogger().warning("権限管理プラグインが見つからないため、プラグインを停止します。");
-			Bukkit.getServer().getPluginManager().disablePlugin(this.plugin);
+			Bukkit.getServer().getPluginManager().disablePlugin(AntiAlts3.getJavaPlugin());
 		}
 	}
 
 	@EventHandler
-	public void PluginDisable(PluginDisableEvent event){
+	public void PluginDisable(PluginDisableEvent event) {
 		Plugin plugin = event.getPlugin();
-		if(plugin == null) return;
-		if(!plugin.getName().equalsIgnoreCase("PermissionsEx") || !plugin.getName().equalsIgnoreCase("LuckPerms")){
+		if (plugin == null)
+			return;
+		if (!plugin.getName().equalsIgnoreCase("PermissionsEx") || !plugin.getName().equalsIgnoreCase("LuckPerms")) {
 			return;
 		}
-		try{
+		try {
 			checkPermissionsPluginAutoSelecter();
-		}catch(UnsupportedOperationException e){
+		} catch (UnsupportedOperationException e) {
 			e.printStackTrace();
 			Bukkit.getLogger().warning("権限管理プラグインが見つからないため、プラグインを停止します。");
-			Bukkit.getServer().getPluginManager().disablePlugin(this.plugin);
+			Bukkit.getServer().getPluginManager().disablePlugin(AntiAlts3.getJavaPlugin());
 		}
 	}
 
 	public enum PermissionsPlugin {
-		PermissionsEx(),
-		LuckPerms();
+		PermissionsEx(), LuckPerms();
 
-		PermissionsPlugin() {}
+		PermissionsPlugin() {
+		}
 	}
 }

@@ -36,6 +36,7 @@ public class AntiAlts3 extends JavaPlugin {
 		Load_Config(); // Config Load
 	}
 
+	public static JavaPlugin JavaPlugin;
 	public static MySQLDBManager MySQLDBManager = null;
 	public static String sqlserver = "jaoafa.com";
 	public static String sqluser;
@@ -84,6 +85,8 @@ public class AntiAlts3 extends JavaPlugin {
 			getServer().getPluginManager().disablePlugin(this);
 			return;
 		}
+
+		JavaPlugin = this;
 	}
 
 	/**
@@ -170,5 +173,9 @@ public class AntiAlts3 extends JavaPlugin {
 			e.printStackTrace();
 			return null;
 		}
+	}
+
+	public static JavaPlugin getJavaPlugin() {
+		return JavaPlugin;
 	}
 }
