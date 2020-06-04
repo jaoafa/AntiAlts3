@@ -36,7 +36,7 @@ public class PermissionsManager implements Listener {
 		} catch (UnsupportedOperationException e) {
 			e.printStackTrace();
 			Bukkit.getLogger().warning("権限管理プラグインが見つからないため、プラグインを停止します。");
-			Bukkit.getServer().getPluginManager().disablePlugin(AntiAlts3.getJavaPlugin());
+			Bukkit.getServer().getPluginManager().disablePlugin(Main.getJavaPlugin());
 		}
 	}
 
@@ -416,7 +416,7 @@ public class PermissionsManager implements Listener {
 		} catch (UnsupportedOperationException e) {
 			e.printStackTrace();
 			Bukkit.getLogger().warning("権限管理プラグインが見つからないため、プラグインを停止します。");
-			Bukkit.getServer().getPluginManager().disablePlugin(AntiAlts3.getJavaPlugin());
+			Bukkit.getServer().getPluginManager().disablePlugin(Main.getJavaPlugin());
 		}
 	}
 
@@ -433,7 +433,7 @@ public class PermissionsManager implements Listener {
 		} catch (UnsupportedOperationException e) {
 			e.printStackTrace();
 			Bukkit.getLogger().warning("権限管理プラグインが見つからないため、プラグインを停止します。");
-			Bukkit.getServer().getPluginManager().disablePlugin(AntiAlts3.getJavaPlugin());
+			Bukkit.getServer().getPluginManager().disablePlugin(Main.getJavaPlugin());
 		}
 	}
 

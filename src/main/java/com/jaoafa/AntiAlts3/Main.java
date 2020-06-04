@@ -22,7 +22,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class AntiAlts3 extends JavaPlugin {
+public class Main extends JavaPlugin {
 	/**
 	 * プラグインが起動したときに呼び出し
 	 * @author mine_book000
@@ -59,8 +59,8 @@ public class AntiAlts3 extends JavaPlugin {
 			getServer().getPluginManager().disablePlugin(this);
 		}
 		if (conf.contains("sqluser") && conf.contains("sqlpassword")) {
-			AntiAlts3.sqluser = conf.getString("sqluser");
-			AntiAlts3.sqlpassword = conf.getString("sqlpassword");
+			Main.sqluser = conf.getString("sqluser");
+			Main.sqlpassword = conf.getString("sqlpassword");
 		} else {
 			getLogger().info("MySQL Connect err. [conf NotFound]");
 			getLogger().info("Disable AntiAlts3...");

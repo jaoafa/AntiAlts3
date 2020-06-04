@@ -26,7 +26,7 @@ import org.bukkit.event.player.AsyncPlayerPreLoginEvent.Result;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.google.common.net.InternetDomainName;
-import com.jaoafa.AntiAlts3.AntiAlts3;
+import com.jaoafa.AntiAlts3.Main;
 import com.jaoafa.AntiAlts3.AntiAltsPlayer;
 import com.jaoafa.AntiAlts3.Discord;
 import com.jaoafa.AntiAlts3.MySQLDBManager;
@@ -106,17 +106,17 @@ public class Event_AsyncPreLogin implements Listener {
 		if (BaseDomain != null)
 			plugin.getLogger().info("BASEDOMAIN: " + BaseDomain.toString());
 
-		MySQLDBManager MySQLDBManager = AntiAlts3.MySQLDBManager;
+		MySQLDBManager MySQLDBManager = Main.MySQLDBManager;
 		if (MySQLDBManager == null) {
 			return;
 		}
 
 		// 2. UUIDをMojangAPIから取得
-		UUID uuid = AntiAlts3.getUUIDByDB(name);
+		UUID uuid = Main.getUUIDByDB(name);
 		if (uuid != null) {
 			plugin.getLogger().info("The uuid was getted from DB.");
 		} else {
-			uuid = AntiAlts3.getUUID(name);
+			uuid = Main.getUUID(name);
 			plugin.getLogger().info("The uuid was getted from Mojang API.");
 		}
 		plugin.getLogger().info("UUID: " + uuid.toString());
@@ -258,7 +258,7 @@ public class Event_AsyncPreLogin implements Listener {
 				}
 				statement_insert.executeUpdate();
 			} catch (SQLException e) {
-				AntiAlts3.report(e);
+				Main.report(e);
 			}
 		}
 
@@ -322,7 +322,7 @@ public class Event_AsyncPreLogin implements Listener {
 	@Nonnull
 	int getAntiAltsUserID(UUID uuid) {
 		try {
-			MySQLDBManager MySQLDBManager = AntiAlts3.MySQLDBManager;
+			MySQLDBManager MySQLDBManager = Main.MySQLDBManager;
 			if (MySQLDBManager == null) {
 				return -1;
 			}
@@ -339,7 +339,7 @@ public class Event_AsyncPreLogin implements Listener {
 				return -1;
 			}
 		} catch (SQLException e) {
-			AntiAlts3.report(e);
+			Main.report(e);
 			return -1;
 		}
 	}
@@ -353,7 +353,7 @@ public class Event_AsyncPreLogin implements Listener {
 	@Nullable
 	String changePlayerID(UUID uuid, String newPlayerID) {
 		try {
-			MySQLDBManager MySQLDBManager = AntiAlts3.MySQLDBManager;
+			MySQLDBManager MySQLDBManager = Main.MySQLDBManager;
 			if (MySQLDBManager == null) {
 				return null;
 			}
@@ -376,7 +376,7 @@ public class Event_AsyncPreLogin implements Listener {
 			statement.close();
 			return null;
 		} catch (SQLException e) {
-			AntiAlts3.report(e);
+			Main.report(e);
 			return null;
 		}
 	}
@@ -387,7 +387,7 @@ public class Event_AsyncPreLogin implements Listener {
 	 */
 	void changeLastLogin(UUID uuid) {
 		try {
-			MySQLDBManager MySQLDBManager = AntiAlts3.MySQLDBManager;
+			MySQLDBManager MySQLDBManager = Main.MySQLDBManager;
 			if (MySQLDBManager == null) {
 				return;
 			}
@@ -397,7 +397,7 @@ public class Event_AsyncPreLogin implements Listener {
 			statement.setString(1, uuid.toString());
 			statement.executeUpdate();
 		} catch (SQLException e) {
-			AntiAlts3.report(e);
+			Main.report(e);
 		}
 	}
 
@@ -408,7 +408,7 @@ public class Event_AsyncPreLogin implements Listener {
 	 */
 	boolean isIgnoreUser(UUID uuid) {
 		try {
-			MySQLDBManager MySQLDBManager = AntiAlts3.MySQLDBManager;
+			MySQLDBManager MySQLDBManager = Main.MySQLDBManager;
 			if (MySQLDBManager == null) {
 				return false;
 			}
@@ -422,7 +422,7 @@ public class Event_AsyncPreLogin implements Listener {
 				return false;
 			}
 		} catch (SQLException e) {
-			AntiAlts3.report(e);
+			Main.report(e);
 			return false;
 		}
 	}
@@ -436,7 +436,7 @@ public class Event_AsyncPreLogin implements Listener {
 	AntiAltsPlayer getMainUUID(int AntiAltsUserID) {
 		try {
 			// antialts_mainに登録されている場合、同一AntiAltsUserIDは全てantialts_mainに登録されているアカウントをメインとする。
-			MySQLDBManager MySQLDBManager = AntiAlts3.MySQLDBManager;
+			MySQLDBManager MySQLDBManager = Main.MySQLDBManager;
 			if (MySQLDBManager == null) {
 				return null;
 			}
@@ -466,7 +466,7 @@ public class Event_AsyncPreLogin implements Listener {
 			}
 			return null;
 		} catch (SQLException e) {
-			AntiAlts3.report(e);
+			Main.report(e);
 			return null;
 		}
 	}
@@ -479,7 +479,7 @@ public class Event_AsyncPreLogin implements Listener {
 	 */
 	int getIdenticalIPUsersCount(InetAddress address, UUID exceptUUID) {
 		try {
-			MySQLDBManager MySQLDBManager = AntiAlts3.MySQLDBManager;
+			MySQLDBManager MySQLDBManager = Main.MySQLDBManager;
 			if (MySQLDBManager == null) {
 				return 0;
 			}
@@ -494,7 +494,7 @@ public class Event_AsyncPreLogin implements Listener {
 			}
 			return 0;
 		} catch (SQLException e) {
-			AntiAlts3.report(e);
+			Main.report(e);
 			return 0;
 		}
 	}
@@ -507,7 +507,7 @@ public class Event_AsyncPreLogin implements Listener {
 	 */
 	int getIdenticalIPSmallestID_And_SetID(InetAddress address, UUID exceptUUID) {
 		try {
-			MySQLDBManager MySQLDBManager = AntiAlts3.MySQLDBManager;
+			MySQLDBManager MySQLDBManager = Main.MySQLDBManager;
 			if (MySQLDBManager == null) {
 				return -1;
 			}
@@ -537,7 +537,7 @@ public class Event_AsyncPreLogin implements Listener {
 
 			return AntiAltsUserID;
 		} catch (SQLException e) {
-			AntiAlts3.report(e);
+			Main.report(e);
 			return -1;
 		}
 	}
@@ -548,7 +548,7 @@ public class Event_AsyncPreLogin implements Listener {
 	 */
 	void setFirstLogin(UUID uuid) {
 		try {
-			MySQLDBManager MySQLDBManager = AntiAlts3.MySQLDBManager;
+			MySQLDBManager MySQLDBManager = Main.MySQLDBManager;
 			if (MySQLDBManager == null) {
 				return;
 			}
@@ -572,7 +572,7 @@ public class Event_AsyncPreLogin implements Listener {
 				statement_updatefirstlogin.executeUpdate();
 			}
 		} catch (SQLException e) {
-			AntiAlts3.report(e);
+			Main.report(e);
 		}
 	}
 
@@ -582,7 +582,7 @@ public class Event_AsyncPreLogin implements Listener {
 	 */
 	void setLastLogin(UUID uuid) {
 		try {
-			MySQLDBManager MySQLDBManager = AntiAlts3.MySQLDBManager;
+			MySQLDBManager MySQLDBManager = Main.MySQLDBManager;
 			if (MySQLDBManager == null) {
 				return;
 			}
@@ -592,7 +592,7 @@ public class Event_AsyncPreLogin implements Listener {
 			statement_updatelastlogin.setString(1, uuid.toString());
 			statement_updatelastlogin.executeUpdate();
 		} catch (SQLException e) {
-			AntiAlts3.report(e);
+			Main.report(e);
 		}
 	}
 
@@ -602,7 +602,7 @@ public class Event_AsyncPreLogin implements Listener {
 	 */
 	void setIPLastLogin(UUID uuid, InetAddress address) {
 		try {
-			MySQLDBManager MySQLDBManager = AntiAlts3.MySQLDBManager;
+			MySQLDBManager MySQLDBManager = Main.MySQLDBManager;
 			if (MySQLDBManager == null) {
 				return;
 			}
@@ -612,7 +612,7 @@ public class Event_AsyncPreLogin implements Listener {
 			statement_updatelastlogin.setString(1, address.getHostAddress());
 			statement_updatelastlogin.executeUpdate();
 		} catch (SQLException e) {
-			AntiAlts3.report(e);
+			Main.report(e);
 		}
 	}
 
@@ -624,7 +624,7 @@ public class Event_AsyncPreLogin implements Listener {
 	 */
 	boolean isNeedINSERT(UUID uuid, InetAddress address) {
 		try {
-			MySQLDBManager MySQLDBManager = AntiAlts3.MySQLDBManager;
+			MySQLDBManager MySQLDBManager = Main.MySQLDBManager;
 			if (MySQLDBManager == null) {
 				return true;
 			}
@@ -639,7 +639,7 @@ public class Event_AsyncPreLogin implements Listener {
 			}
 			return true;
 		} catch (SQLException e) {
-			AntiAlts3.report(e);
+			Main.report(e);
 			return true;
 		}
 	}
@@ -650,7 +650,7 @@ public class Event_AsyncPreLogin implements Listener {
 	 */
 	int getLastID() {
 		try {
-			MySQLDBManager MySQLDBManager = AntiAlts3.MySQLDBManager;
+			MySQLDBManager MySQLDBManager = Main.MySQLDBManager;
 			if (MySQLDBManager == null) {
 				return -1;
 			}
@@ -662,7 +662,7 @@ public class Event_AsyncPreLogin implements Listener {
 			}
 			return -1;
 		} catch (SQLException e) {
-			AntiAlts3.report(e);
+			Main.report(e);
 			return -1;
 		}
 	}
@@ -670,7 +670,7 @@ public class Event_AsyncPreLogin implements Listener {
 	@Nonnull
 	Set<AntiAltsPlayer> getUsers(int AntiAltsUserID, UUID exceptUUID) {
 		try {
-			MySQLDBManager MySQLDBManager = AntiAlts3.MySQLDBManager;
+			MySQLDBManager MySQLDBManager = Main.MySQLDBManager;
 			if (MySQLDBManager == null) {
 				return new HashSet<>();
 			}
@@ -696,7 +696,7 @@ public class Event_AsyncPreLogin implements Listener {
 			}
 			return players;
 		} catch (SQLException e) {
-			AntiAlts3.report(e);
+			Main.report(e);
 			return new HashSet<>();
 		}
 	}
@@ -707,7 +707,7 @@ public class Event_AsyncPreLogin implements Listener {
 			if (BaseDomain == null) {
 				return new HashSet<>();
 			}
-			MySQLDBManager MySQLDBManager = AntiAlts3.MySQLDBManager;
+			MySQLDBManager MySQLDBManager = Main.MySQLDBManager;
 			if (MySQLDBManager == null) {
 				return new HashSet<>();
 			}
@@ -734,7 +734,7 @@ public class Event_AsyncPreLogin implements Listener {
 			}
 			return players;
 		} catch (SQLException e) {
-			AntiAlts3.report(e);
+			Main.report(e);
 			return new HashSet<>();
 		}
 	}
