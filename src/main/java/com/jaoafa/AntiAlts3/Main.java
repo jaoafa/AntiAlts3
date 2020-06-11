@@ -39,6 +39,7 @@ public class Main extends JavaPlugin {
 	public static JavaPlugin JavaPlugin;
 	public static MySQLDBManager MySQLDBManager = null;
 	public static String sqlserver = "jaoafa.com";
+	public static String sqlport = "3306";
 	public static String sqluser;
 	public static String sqlpassword;
 	public static long ConnectionCreate = 0;
@@ -72,10 +73,14 @@ public class Main extends JavaPlugin {
 			sqlserver = (String) conf.get("sqlserver");
 		}
 
+		if (conf.contains("sqlport")) {
+			sqlport = (String) conf.get("sqlport");
+		}
+
 		try {
 			MySQLDBManager = new MySQLDBManager(
 					sqlserver,
-					"3306",
+					sqlport,
 					"jaoafa",
 					sqluser,
 					sqlpassword);
