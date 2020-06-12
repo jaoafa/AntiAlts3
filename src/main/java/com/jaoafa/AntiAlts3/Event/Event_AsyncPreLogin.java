@@ -26,9 +26,9 @@ import org.bukkit.event.player.AsyncPlayerPreLoginEvent.Result;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.google.common.net.InternetDomainName;
-import com.jaoafa.AntiAlts3.Main;
 import com.jaoafa.AntiAlts3.AntiAltsPlayer;
 import com.jaoafa.AntiAlts3.Discord;
+import com.jaoafa.AntiAlts3.Main;
 import com.jaoafa.AntiAlts3.MySQLDBManager;
 import com.jaoafa.AntiAlts3.PermissionsManager;
 
@@ -108,6 +108,7 @@ public class Event_AsyncPreLogin implements Listener {
 
 		MySQLDBManager MySQLDBManager = Main.MySQLDBManager;
 		if (MySQLDBManager == null) {
+			plugin.getLogger().info("MySQLDBManager is null");
 			return;
 		}
 
