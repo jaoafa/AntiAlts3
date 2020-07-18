@@ -16,15 +16,17 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.json.simple.JSONObject;
 
 public class Discord {
-	public static void start(JavaPlugin plugin, String token){
+	public static void start(JavaPlugin plugin, String token) {
 		Discord.plugin = plugin;
 		Discord.token = token;
 
 		Bukkit.getLogger().info("Discord Connected!");
 	}
+
 	static JavaPlugin plugin;
 	static String token;
-	public static boolean send(String message){
+
+	public static boolean send(String message) {
 		Map<String, String> headers = new HashMap<String, String>();
 		headers.put("Content-Type", "application/json");
 		headers.put("Authorization", "Bot " + token);
@@ -32,14 +34,14 @@ public class Discord {
 
 		Map<String, String> contents = new HashMap<String, String>();
 		contents.put("content", message);
-		return postHttpJsonByJson("https://discordapp.com/api/channels/250613942106193921/messages", headers, contents);
+		return postHttpJsonByJson("https://discord.com/api/channels/250613942106193921/messages", headers, contents);
 	}
 
-
 	@SuppressWarnings("unchecked")
-	private static boolean postHttpJsonByJson(String address, Map<String, String> headers, Map<String, String> contents){
+	private static boolean postHttpJsonByJson(String address, Map<String, String> headers,
+			Map<String, String> contents) {
 		StringBuilder builder = new StringBuilder();
-		try{
+		try {
 			URL url = new URL(address);
 
 			/*TrustManager[] tm = { new X509TrustManager() {
@@ -47,13 +49,13 @@ public class Discord {
 				public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType)
 						throws CertificateException {
 					// TODO 自動生成されたメソッド・スタブ
-
+			
 				}
 				@Override
 				public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType)
 						throws CertificateException {
 					// TODO 自動生成されたメソッド・スタブ
-
+			
 				}
 				@Override
 				public java.security.cert.X509Certificate[] getAcceptedIssuers() {
@@ -70,11 +72,11 @@ public class Discord {
 				}
 			});
 			 */
-			HttpsURLConnection connect = (HttpsURLConnection)url.openConnection();
+			HttpsURLConnection connect = (HttpsURLConnection) url.openConnection();
 			connect.setRequestMethod("POST");
 			// connect.setSSLSocketFactory(sslcontext.getSocketFactory());
-			if(headers != null){
-				for(Map.Entry<String, String> header : headers.entrySet()){
+			if (headers != null) {
+				for (Map.Entry<String, String> header : headers.entrySet()) {
 					connect.setRequestProperty(header.getKey(), header.getValue());
 				}
 			}
@@ -83,7 +85,7 @@ public class Discord {
 			OutputStreamWriter out = new OutputStreamWriter(connect.getOutputStream());
 			//List<String> list = new ArrayList<>();
 			JSONObject paramobj = new JSONObject();
-			for(Map.Entry<String, String> content : contents.entrySet()){
+			for (Map.Entry<String, String> content : contents.entrySet()) {
 				//list.add(content.getKey() + "=" + content.getValue());
 				paramobj.put(content.getKey(), content.getValue());
 			}
@@ -94,7 +96,7 @@ public class Discord {
 
 			connect.connect();
 
-			if(connect.getResponseCode() != HttpURLConnection.HTTP_OK){
+			if (connect.getResponseCode() != HttpURLConnection.HTTP_OK) {
 				InputStream in = connect.getErrorStream();
 
 				BufferedReader reader = new BufferedReader(new InputStreamReader(in));
@@ -122,13 +124,14 @@ public class Discord {
 			//Object obj = parser.parse(builder.toString());
 			//JSONObject json = (JSONObject) obj;
 			return true;
-		}catch(Exception e){
+		} catch (Exception e) {
 			e.printStackTrace();
 			//BugReport.report(e);
 			return false;
 		}
 	}
-	public static boolean send(String channelid, String message){
+
+	public static boolean send(String channelid, String message) {
 		Map<String, String> headers = new HashMap<String, String>();
 		headers.put("Content-Type", "application/json");
 		headers.put("Authorization", "Bot " + token);
@@ -136,6 +139,6 @@ public class Discord {
 
 		Map<String, String> contents = new HashMap<String, String>();
 		contents.put("content", message);
-		return postHttpJsonByJson("https://discordapp.com/api/channels/" + channelid + "/messages", headers, contents);
+		return postHttpJsonByJson("https://discord.com/api/channels/" + channelid + "/messages", headers, contents);
 	}
 }
