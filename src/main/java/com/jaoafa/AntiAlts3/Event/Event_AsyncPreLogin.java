@@ -12,9 +12,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
@@ -320,7 +317,6 @@ public class Event_AsyncPreLogin implements Listener {
 	 * @param uuid 取得する元のUUID
 	 * @return AntiAltsUserID　取得したAntiAltsUserID。取得できなければ-1
 	 */
-	@Nonnull
 	int getAntiAltsUserID(UUID uuid) {
 		try {
 			MySQLDBManager MySQLDBManager = Main.MySQLDBManager;
@@ -351,7 +347,6 @@ public class Event_AsyncPreLogin implements Listener {
 	 * @param newPlayerID 新しいPlayerID
 	 * @return 古いPlayerID。変更されていなければnull
 	 */
-	@Nullable
 	String changePlayerID(UUID uuid, String newPlayerID) {
 		try {
 			MySQLDBManager MySQLDBManager = Main.MySQLDBManager;
@@ -433,7 +428,6 @@ public class Event_AsyncPreLogin implements Listener {
 	 * @param AntiAltsUserID 対象のAntiAltsUserID
 	 * @return メインアカウント
 	 */
-	@Nullable
 	AntiAltsPlayer getMainUUID(int AntiAltsUserID) {
 		try {
 			// antialts_mainに登録されている場合、同一AntiAltsUserIDは全てantialts_mainに登録されているアカウントをメインとする。
@@ -668,7 +662,6 @@ public class Event_AsyncPreLogin implements Listener {
 		}
 	}
 
-	@Nonnull
 	Set<AntiAltsPlayer> getUsers(int AntiAltsUserID, UUID exceptUUID) {
 		try {
 			MySQLDBManager MySQLDBManager = Main.MySQLDBManager;
@@ -702,7 +695,6 @@ public class Event_AsyncPreLogin implements Listener {
 		}
 	}
 
-	@Nonnull
 	Set<AntiAltsPlayer> getUsers(InternetDomainName BaseDomain, UUID exceptUUID) {
 		try {
 			if (BaseDomain == null) {

@@ -2,9 +2,6 @@ package com.jaoafa.AntiAlts3;
 
 import java.util.UUID;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
@@ -32,12 +29,10 @@ public class AntiAltsPlayer {
 		this.uuid = uuid;
 	}
 
-	@Nullable
 	public String getName() {
 		return name;
 	}
 
-	@Nonnull
 	public UUID getUniqueId() {
 		return uuid;
 	}
