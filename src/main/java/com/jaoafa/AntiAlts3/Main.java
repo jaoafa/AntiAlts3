@@ -169,6 +169,7 @@ public class Main extends JavaPlugin {
 				if (response.body() != null) {
 					System.out.println("[AntiAlts3] Response: " + response.body().string());
 				}
+				response.close();
 				return null;
 			}
 			JSONObject obj = new JSONObject(response.body().string());
