@@ -112,14 +112,21 @@ public class Event_AsyncPreLogin implements Listener {
 		// 2. UUIDをMojangAPIから取得
 		UUID uuid = Main.getUUIDByDB(name);
 		if (uuid != null) {
-			plugin.getLogger().info("The uuid was getted from DB.");
+			plugin.getLogger().info("The uuid was got from DB.");
 		} else {
 			uuid = Main.getUUID(name);
-			plugin.getLogger().info("The uuid was getted from Mojang API.");
+			plugin.getLogger().info("The uuid was got from Mojang API.");
+		}
+		if(uuid == null){
+			plugin.getLogger().warning("uuid = null.");
+			String message = ChatColor.RED + "----- ANTI ALTS -----\n"
+					+ ChatColor.RESET + ChatColor.WHITE + "システム不具合によりUUIDの取得に失敗しました。少し時間をおいてから再度お試しください。";
+			event.disallow(Result.KICK_BANNED, message);
+			return;
 		}
 		plugin.getLogger().info("UUID: " + uuid.toString());
 
-		// 3. UUIDが合致するデータ(プレイヤーデータ)がantialtsのデータベーステーブルにあるかどうか調べる。あればAntiAltsUserID取得
+		// 3. UUIDが合致するデータ(プレイヤーデータ)がAntiAltsのデータベーステーブルにあるかどうか調べる。あればAntiAltsUserID取得
 		int AntiAltsUserID = getAntiAltsUserID(uuid);
 		if (AntiAltsUserID != -1) {
 			// 4. UUIDが同じでMinecraftIDがデータベースのデータと違ったらデータベース更新。Discord通知
@@ -128,13 +135,9 @@ public class Event_AsyncPreLogin implements Listener {
 				plugin.getLogger().info("The player ID has been changed. (" + oldName + " -> " + name + ")");
 
 				for (Player p : Bukkit.getServer().getOnlinePlayers()) {
-					String group = PermissionsManager.getPermissionMainGroup(p);
-					if (group.equalsIgnoreCase("Admin") || group.equalsIgnoreCase("Moderator")
-							|| group.equalsIgnoreCase("Regular")) {
-						p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + "|-- " + name + " : - : プレイヤー名変更情報 --|");
-						p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + "このプレイヤーは、前回ログインからプレイヤー名を変更しています。(旧名: "
-								+ oldName + ")");
-					}
+					if (!isAMR(p)) continue;
+					p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + "|-- " + name + " : - : プレイヤー名変更情報 --|");
+					p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + "このプレイヤーは、前回ログインからプレイヤー名を変更しています。(旧名: " + oldName + ")");
 				}
 				Discord.send("597423444501463040", "__**[AntiAlts3]**__ `" + name + "` : - : プレイヤー名変更情報\n"
 						+ "このプレイヤーは、前回ログインからプレイヤー名を変更しています。(旧名: `" + oldName + "`)\n"
@@ -179,11 +182,9 @@ public class Event_AsyncPreLogin implements Listener {
 					+ "もしこの判定が誤判定と思われる場合は、公式Discord#supportでお問い合わせをお願い致します。";
 			event.disallow(Result.KICK_BANNED, message);
 			for (Player p : Bukkit.getServer().getOnlinePlayers()) {
-				String group = PermissionsManager.getPermissionMainGroup(p);
-				if (group.equalsIgnoreCase("Admin") || group.equalsIgnoreCase("Moderator")) {
-					p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + name + ": サブアカウントログイン規制(1 - メイン: "
-							+ MainAltID + ")");
-				}
+				if(isAM(p)) continue;
+				p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + name + ": サブアカウントログイン規制(1 - メイン: "
+						+ MainAltID + ")");
 			}
 			Discord.send("597423444501463040",
 					"__**[AntiAlts3]**__ `" + name + "`: サブアカウントログイン規制(1 - メイン: `" + MainAltID + "`)");
@@ -222,11 +223,9 @@ public class Event_AsyncPreLogin implements Listener {
 						+ "もしこの判定が誤判定と思われる場合は、公式Discord#supportでお問い合わせをお願い致します。";
 				event.disallow(Result.KICK_BANNED, message);
 				for (Player p : Bukkit.getServer().getOnlinePlayers()) {
-					String group = PermissionsManager.getPermissionMainGroup(p);
-					if (group.equalsIgnoreCase("Admin") || group.equalsIgnoreCase("Moderator")) {
-						p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + name + ": サブアカウントログイン規制(2 - メイン: "
-								+ IdenticalIPMainAltID + ")");
-					}
+					if (!isAM(p)) continue;
+					p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + name + ": サブアカウントログイン規制(2 - メイン: "
+							+ IdenticalIPMainAltID + ")");
 				}
 				Discord.send("597423444501463040",
 						"__**[AntiAlts3]**__ `" + name + "`: サブアカウントログイン規制(2 - メイン: `" + IdenticalIPMainAltID + "`)");
@@ -272,17 +271,14 @@ public class Event_AsyncPreLogin implements Listener {
 		// 10. 同一AntiAltsUserIDのプレイヤーリストを管理部・モデレーター・常連に表示(Discordにも。)
 		Set<AntiAltsPlayer> IdenticalUserIDPlayers = getUsers(AntiAltsUserID, uuid);
 		if (!IdenticalUserIDPlayers.isEmpty()) {
-			List<String> names = IdenticalUserIDPlayers.stream().map(_player -> _player.getName())
+			List<String> names = IdenticalUserIDPlayers.stream().map(AntiAltsPlayer::getName)
 					.collect(Collectors.toList());
 			for (Player p : Bukkit.getServer().getOnlinePlayers()) {
-				String group = PermissionsManager.getPermissionMainGroup(p);
-				if (group.equalsIgnoreCase("Admin") || group.equalsIgnoreCase("Moderator")
-						|| group.equalsIgnoreCase("Regular")) {
-					p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + "|-- " + name + " : - : サブアカウント情報 --|");
-					p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + "このプレイヤーには、以下、" + IdenticalUserIDPlayers.size()
-							+ "個見つかっています。");
-					p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + String.join(", ", names));
-				}
+				if (!isAMR(p)) continue;
+				p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + "|-- " + name + " : - : サブアカウント情報 --|");
+				p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + "このプレイヤーには、以下、" + IdenticalUserIDPlayers.size()
+						+ "個見つかっています。");
+				p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + String.join(", ", names));
 			}
 			Discord.send("619637580987760656", "__**[AntiAlts3]**__ `" + name + "` : - : サブアカウント情報\n"
 					+ "このプレイヤーには、以下、" + IdenticalUserIDPlayers.size() + "個のアカウントが見つかっています。\n"
@@ -292,20 +288,18 @@ public class Event_AsyncPreLogin implements Listener {
 		// 11. 同一ドメインの非同一UUIDで、48h以内にラストログインしたプレイヤーをリスト化。管理部・モデレーターに出力
 		Set<AntiAltsPlayer> IdenticalBaseDomainPlayers = getUsers(BaseDomain, uuid);
 		if (!IdenticalBaseDomainPlayers.isEmpty()) {
-			List<String> names = IdenticalBaseDomainPlayers.stream().map(_player -> _player.getName())
+			List<String> names = IdenticalBaseDomainPlayers.stream().map(AntiAltsPlayer::getName)
 					.collect(Collectors.toList());
 			for (Player p : Bukkit.getServer().getOnlinePlayers()) {
-				String group = PermissionsManager.getPermissionMainGroup(p);
-				if (group.equalsIgnoreCase("Admin") || group.equalsIgnoreCase("Moderator")) {
-					p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + "|-- " + name + " : - : 同一ベースドメイン情報 --|");
-					p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + "このプレイヤードメインと同一のプレイヤーが"
-							+ IdenticalBaseDomainPlayers.size()
-							+ "個見つかっています。");
-					p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + String.join(", ", names));
-				}
+				if (!isAM(p)) continue;
+				p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + "|-- " + name + " : - : 同一ベースドメイン情報 --|");
+				p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + "このプレイヤードメインと同一のプレイヤーが"
+						+ IdenticalBaseDomainPlayers.size()
+						+ "個見つかっています。");
+				p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + String.join(", ", names));
 			}
 			Discord.send("619637580987760656",
-					"__**[AntiAlts3]**__ `" + name + "` : - : 同一ベースドメイン情報 (`" + BaseDomain.toString() + "`)\n"
+					"__**[AntiAlts3]**__ `" + name + "` : - : 同一ベースドメイン情報 (`" + (BaseDomain != null ? BaseDomain.toString() : "null") + "`)\n"
 							+ "このプレイヤードメインと同一のプレイヤーが" + IdenticalBaseDomainPlayers.size()
 							+ "個見つかっています。\n"
 							+ "`" + String.join(", ", names) + "`");
@@ -329,9 +323,11 @@ public class Event_AsyncPreLogin implements Listener {
 			ResultSet res = statement.executeQuery();
 			if (res.next()) {
 				int userid = res.getInt("userid");
+				res.close();
 				statement.close();
 				return userid;
 			} else {
+				res.close();
 				statement.close();
 				return -1;
 			}
@@ -366,9 +362,11 @@ public class Event_AsyncPreLogin implements Listener {
 				statement_update.setString(2, uuid.toString());
 				statement_update.executeUpdate();
 				String player = res.getString("player");
+				res.close();
 				statement.close();
 				return player;
 			}
+			res.close();
 			statement.close();
 			return null;
 		} catch (SQLException e) {
@@ -392,6 +390,7 @@ public class Event_AsyncPreLogin implements Listener {
 					.prepareStatement("UPDATE antialts_new SET lastlogin = CURRENT_TIMESTAMP WHERE uuid = ?");
 			statement.setString(1, uuid.toString());
 			statement.executeUpdate();
+			statement.close();
 		} catch (SQLException e) {
 			Main.report(e);
 		}
@@ -412,11 +411,10 @@ public class Event_AsyncPreLogin implements Listener {
 			PreparedStatement statement = conn.prepareStatement("SELECT * FROM antialts_ignore WHERE uuid = ?");
 			statement.setString(1, uuid.toString());
 			ResultSet res = statement.executeQuery();
-			if (res.next()) {
-				return true;
-			} else {
-				return false;
-			}
+			boolean bool = res.next();
+			res.close();
+			statement.close();
+			return bool;
 		} catch (SQLException e) {
 			Main.report(e);
 			return false;
@@ -449,16 +447,19 @@ public class Event_AsyncPreLogin implements Listener {
 
 			// そうでない場合、同一AntiAltsUserIDのリストを取得して1番目をメインとする。(idが一番小さいもの)
 			PreparedStatement statement_useridlist = conn
-					.prepareStatement("SELECT * FROM antialts_new WHERE userid = ? ORDER BY id ASC");
+					.prepareStatement("SELECT * FROM antialts_new WHERE userid = ? ORDER BY id");
 			statement_useridlist.setInt(1, AntiAltsUserID);
 			ResultSet useridlist_res = statement_useridlist.executeQuery();
 			if (useridlist_res.next()) {
 				String name = useridlist_res.getString("player");
 				UUID uuid = UUID.fromString(useridlist_res.getString("uuid"));
 				useridlist_res.close();
+				statement_useridlist.close();
 				return new AntiAltsPlayer(name, uuid);
 				//return Bukkit.getOfflinePlayer(UUID.fromString(useridlist_res.getString("uuid")));
 			}
+			useridlist_res.close();
+			statement_useridlist.close();
 			return null;
 		} catch (SQLException e) {
 			Main.report(e);
@@ -484,10 +485,11 @@ public class Event_AsyncPreLogin implements Listener {
 			statement.setString(1, address.getHostAddress());
 			statement.setString(2, exceptUUID.toString());
 			ResultSet res = statement.executeQuery();
-			if (res.next()) {
-				return res.getInt(1);
-			}
-			return 0;
+			int i = 0;
+			if (res.next()) i = res.getInt(1);
+			res.close();
+			statement.close();
+			return i;
 		} catch (SQLException e) {
 			Main.report(e);
 			return 0;
@@ -519,6 +521,8 @@ public class Event_AsyncPreLogin implements Listener {
 
 			// 対象のすべての行に小さいAntiAltsUserIDを設定 -> 同一
 			if (AntiAltsUserID == Integer.MAX_VALUE) {
+				res_sameIP.close();
+				statement_sameIP.close();
 				return -1;
 			}
 			res_sameIP.first();
@@ -530,6 +534,8 @@ public class Event_AsyncPreLogin implements Listener {
 				statement_updateUserid.executeUpdate();
 			}
 
+			res_sameIP.close();
+			statement_sameIP.close();
 			return AntiAltsUserID;
 		} catch (SQLException e) {
 			Main.report(e);
@@ -549,23 +555,26 @@ public class Event_AsyncPreLogin implements Listener {
 			}
 			Connection conn = MySQLDBManager.getConnection();
 			Timestamp firstlogin = new Timestamp(System.currentTimeMillis());
-			PreparedStatement statement_FirstLogin = conn.prepareStatement("SELECT * FROM antialts_new WHERE uuid = ?");
-			statement_FirstLogin.setString(1, uuid.toString());
-			ResultSet res_FirstLogin = statement_FirstLogin.executeQuery();
-			while (res_FirstLogin.next()) {
-				if (res_FirstLogin.getTimestamp("firstlogin").before(firstlogin)) {
-					firstlogin = res_FirstLogin.getTimestamp("firstlogin");
+			PreparedStatement statement = conn.prepareStatement("SELECT * FROM antialts_new WHERE uuid = ?");
+			statement.setString(1, uuid.toString());
+			ResultSet res = statement.executeQuery();
+			while (res.next()) {
+				if (res.getTimestamp("firstlogin").before(firstlogin)) {
+					firstlogin = res.getTimestamp("firstlogin");
 				}
 			}
 
-			res_FirstLogin.first();
-			while (res_FirstLogin.next()) {
+			res.first();
+			while (res.next()) {
 				PreparedStatement statement_updatefirstlogin = conn
 						.prepareStatement("UPDATE antialts_new SET firstlogin = ? WHERE id = ?");
 				statement_updatefirstlogin.setTimestamp(1, firstlogin);
-				statement_updatefirstlogin.setInt(2, res_FirstLogin.getInt("id"));
+				statement_updatefirstlogin.setInt(2, res.getInt("id"));
 				statement_updatefirstlogin.executeUpdate();
+				statement_updatefirstlogin.close();
 			}
+			res.close();
+			statement.close();
 		} catch (SQLException e) {
 			Main.report(e);
 		}
@@ -582,10 +591,11 @@ public class Event_AsyncPreLogin implements Listener {
 				return;
 			}
 			Connection conn = MySQLDBManager.getConnection();
-			PreparedStatement statement_updatelastlogin = conn
+			PreparedStatement statement = conn
 					.prepareStatement("UPDATE antialts_new SET lastlogin = CURRENT_TIMESTAMP WHERE uuid = ?");
-			statement_updatelastlogin.setString(1, uuid.toString());
-			statement_updatelastlogin.executeUpdate();
+			statement.setString(1, uuid.toString());
+			statement.executeUpdate();
+			statement.close();
 		} catch (SQLException e) {
 			Main.report(e);
 		}
@@ -602,10 +612,11 @@ public class Event_AsyncPreLogin implements Listener {
 				return;
 			}
 			Connection conn = MySQLDBManager.getConnection();
-			PreparedStatement statement_updatelastlogin = conn
+			PreparedStatement statement = conn
 					.prepareStatement("UPDATE antialts_new SET iplastlogin = CURRENT_TIMESTAMP WHERE ip = ?");
-			statement_updatelastlogin.setString(1, address.getHostAddress());
-			statement_updatelastlogin.executeUpdate();
+			statement.setString(1, address.getHostAddress());
+			statement.executeUpdate();
+			statement.close();
 		} catch (SQLException e) {
 			Main.report(e);
 		}
@@ -615,7 +626,7 @@ public class Event_AsyncPreLogin implements Listener {
 	 * 登録すべきかどうかを判定します。
 	 * @param uuid 対象のUUID
 	 * @param address 対象のInetAddress
-	 * @return
+	 * @return 登録すべきか
 	 */
 	boolean isNeedINSERT(UUID uuid, InetAddress address) {
 		try {
@@ -629,10 +640,10 @@ public class Event_AsyncPreLogin implements Listener {
 			statement_selectAlready.setString(1, uuid.toString());
 			statement_selectAlready.setString(2, address.getHostAddress());
 			ResultSet res_selectAlready = statement_selectAlready.executeQuery();
-			if (res_selectAlready.next() && res_selectAlready.getInt(1) != 0) {
-				return false;
-			}
-			return true;
+			boolean bool = !res_selectAlready.next() || res_selectAlready.getInt(1) == 0;
+			res_selectAlready.close();
+			statement_selectAlready.close();
+			return bool;
 		} catch (SQLException e) {
 			Main.report(e);
 			return true;
@@ -652,10 +663,11 @@ public class Event_AsyncPreLogin implements Listener {
 			Connection conn = MySQLDBManager.getConnection();
 			PreparedStatement statement = conn.prepareStatement("SELECT * FROM antialts_new ORDER BY id DESC LIMIT 1");
 			ResultSet res = statement.executeQuery();
-			if (res.next()) {
-				return res.getInt(1);
-			}
-			return -1;
+			int i = -1;
+			if (res.next()) i = res.getInt(1);
+			res.close();
+			statement.close();
+			return i;
 		} catch (SQLException e) {
 			Main.report(e);
 			return -1;
@@ -688,6 +700,8 @@ public class Event_AsyncPreLogin implements Listener {
 				}
 				players.add(player);
 			}
+			res.close();
+			statement.close();
 			return players;
 		} catch (SQLException e) {
 			Main.report(e);
@@ -725,10 +739,20 @@ public class Event_AsyncPreLogin implements Listener {
 				}
 				players.add(player);
 			}
+			res.close();
+			statement.close();
 			return players;
 		} catch (SQLException e) {
 			Main.report(e);
 			return new HashSet<>();
 		}
+	}
+	boolean isAM(Player player){
+		String group = PermissionsManager.getPermissionMainGroup(player);
+		return group.equalsIgnoreCase("Admin") || group.equalsIgnoreCase("Moderator");
+	}
+	boolean isAMR(Player player){
+		String group = PermissionsManager.getPermissionMainGroup(player);
+		return group.equalsIgnoreCase("Admin") || group.equalsIgnoreCase("Moderator") || group.equalsIgnoreCase("Regular");
 	}
 }
