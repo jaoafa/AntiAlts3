@@ -532,10 +532,37 @@ public class Event_AsyncPreLogin implements Listener {
 				statement_updateUserid.setInt(1, AntiAltsUserID);
 				statement_updateUserid.setInt(2, res_sameIP.getInt("id"));
 				statement_updateUserid.executeUpdate();
+				statement_updateUserid.close();
 			}
 
 			res_sameIP.close();
 			statement_sameIP.close();
+
+			// 更に小さいAntiAltsUserIDを探す
+			Set<Integer> replaceIds = new HashSet<>();
+			PreparedStatement statement_sameIPorUUID = conn
+					.prepareStatement("SELECT * FROM antialts_new WHERE ip = ? OR uuid = ?");
+			statement_sameIPorUUID.setString(1, address.getHostAddress());
+			statement_sameIPorUUID.setString(2, exceptUUID.toString());
+			ResultSet res_sameIPorUUID = statement_sameIPorUUID.executeQuery();
+			while (res_sameIPorUUID.next()) {
+				if(AntiAltsUserID > res_sameIPorUUID.getInt("userid")) {
+					AntiAltsUserID = res_sameIPorUUID.getInt("userid");
+				}
+				replaceIds.add(res_sameIPorUUID.getInt("userid"));
+			}
+			res_sameIPorUUID.close();
+			statement_sameIPorUUID.close();
+			replaceIds.remove(AntiAltsUserID);
+			for(int replaceId : replaceIds){
+				System.out.printf("[getIdenticalIPSmallestID_And_SetID] %d -> %d%n", replaceId, AntiAltsUserID);
+				PreparedStatement replaceStatement = conn.prepareStatement("UPDATE antialts_new SET userid = ? WHERE userid = ?");
+				replaceStatement.setInt(1, AntiAltsUserID);
+				replaceStatement.setInt(2, replaceId);
+				replaceStatement.executeUpdate();
+				replaceStatement.close();
+			}
+
 			return AntiAltsUserID;
 		} catch (SQLException e) {
 			Main.report(e);
