@@ -25,6 +25,7 @@
     <list default="true" id="43944b32-306c-4f43-b4b4-4a15f5a51760" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/jaoafa/AntiAlts3/Event/Event_AsyncPreLogin.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/jaoafa/AntiAlts3/Event/Event_AsyncPreLogin.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/plugin.yml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/plugin.yml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -54,6 +55,33 @@
     <property name="aspect.path.notification.shown" value="true" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/../Bakushinchi" />
   </component>
+  <component name="RunManager">
+    <configuration name="AntiAlts3 [install]" type="MavenRunConfiguration" factoryName="Maven" nameIsGenerated="true">
+      <MavenSettings>
+        <option name="myGeneralSettings" />
+        <option name="myRunnerSettings" />
+        <option name="myRunnerParameters">
+          <MavenRunnerParameters>
+            <option name="profiles">
+              <set />
+            </option>
+            <option name="goals">
+              <list>
+                <option value="install" />
+              </list>
+            </option>
+            <option name="pomFileName" />
+            <option name="profilesMap">
+              <map />
+            </option>
+            <option name="resolveToWorkspace" value="false" />
+            <option name="workingDirPath" value="$PROJECT_DIR$" />
+          </MavenRunnerParameters>
+        </option>
+      </MavenSettings>
+      <method v="2" />
+    </configuration>
+  </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
@@ -64,7 +92,9 @@
       <updated>1596115858710</updated>
       <workItem from="1596115859868" duration="36000" />
       <workItem from="1601072938642" duration="3126000" />
-      <workItem from="1601983169980" duration="3301000" />
+      <workItem from="1601983169980" duration="4002000" />
+      <workItem from="1602095126538" duration="137000" />
+      <workItem from="1602305488621" duration="404000" />
     </task>
     <task id="LOCAL-00001" summary="change/fix: バグ修正、多少調整、メモリリーク改善">
       <created>1601075659830</created>
@@ -73,7 +103,14 @@
       <option name="project" value="LOCAL" />
       <updated>1601075659830</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="change: getIdenticalIPSmallestID_And_SetIDで最も小さいAntiAltsUserID探すように(同一IP, 同一UUIDの取得)">
+      <created>1601987519236</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1601987519236</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -93,13 +130,18 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="change/fix: バグ修正、多少調整、メモリリーク改善" />
-    <option name="LAST_COMMIT_MESSAGE" value="change/fix: バグ修正、多少調整、メモリリーク改善" />
+    <MESSAGE value="change: getIdenticalIPSmallestID_And_SetIDで最も小さいAntiAltsUserID探すように(同一IP, 同一UUIDの取得)" />
+    <option name="LAST_COMMIT_MESSAGE" value="change: getIdenticalIPSmallestID_And_SetIDで最も小さいAntiAltsUserID探すように(同一IP, 同一UUIDの取得)" />
   </component>
   <component name="WindowStateProjectService">
     <state x="586" y="203" key="#Inspections" timestamp="1601074626983">
       <screen x="0" y="0" width="1920" height="1050" />
     </state>
     <state x="586" y="203" key="#Inspections/0.0.1920.1050/1920.54.1280.994/590.1080.1024.738@0.0.1920.1050" timestamp="1601074626983" />
+    <state x="414" y="180" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1602095181498">
+      <screen x="0" y="0" width="1920" height="1050" />
+    </state>
+    <state x="414" y="180" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1920.1050/1920.48.1280.994@0.0.1920.1050" timestamp="1602095181498" />
     <state x="92" y="92" width="1736" height="866" key="DiffContextDialog" timestamp="1601074012128">
       <screen x="0" y="0" width="1920" height="1050" />
     </state>
@@ -109,9 +151,26 @@
     </state>
     <state x="740" y="280" key="FileChooserDialogImpl/0.0.1920.1050/1920.48.1280.994@0.0.1920.1050" timestamp="1596115866132" />
     <state x="740" y="280" key="FileChooserDialogImpl/0.0.1920.1050/1920.54.1280.994/590.1080.1024.738@0.0.1920.1050" timestamp="1601073797824" />
-    <state x="552" y="258" key="Vcs.Push.Dialog.v2" timestamp="1601075662848">
+    <state width="1877" height="285" key="GridCell.Tab.0.bottom" timestamp="1602095265029">
       <screen x="0" y="0" width="1920" height="1050" />
     </state>
+    <state width="1877" height="285" key="GridCell.Tab.0.bottom/0.0.1920.1050/1920.48.1280.994@0.0.1920.1050" timestamp="1602095265029" />
+    <state width="1877" height="285" key="GridCell.Tab.0.center" timestamp="1602095265029">
+      <screen x="0" y="0" width="1920" height="1050" />
+    </state>
+    <state width="1877" height="285" key="GridCell.Tab.0.center/0.0.1920.1050/1920.48.1280.994@0.0.1920.1050" timestamp="1602095265029" />
+    <state width="1877" height="285" key="GridCell.Tab.0.left" timestamp="1602095265029">
+      <screen x="0" y="0" width="1920" height="1050" />
+    </state>
+    <state width="1877" height="285" key="GridCell.Tab.0.left/0.0.1920.1050/1920.48.1280.994@0.0.1920.1050" timestamp="1602095265029" />
+    <state width="1877" height="285" key="GridCell.Tab.0.right" timestamp="1602095265029">
+      <screen x="0" y="0" width="1920" height="1050" />
+    </state>
+    <state width="1877" height="285" key="GridCell.Tab.0.right/0.0.1920.1050/1920.48.1280.994@0.0.1920.1050" timestamp="1602095265029" />
+    <state x="552" y="258" key="Vcs.Push.Dialog.v2" timestamp="1601987520886">
+      <screen x="0" y="0" width="1920" height="1050" />
+    </state>
+    <state x="552" y="258" key="Vcs.Push.Dialog.v2/0.0.1920.1050/1920.48.1280.994@0.0.1920.1050" timestamp="1601987520886" />
     <state x="552" y="258" key="Vcs.Push.Dialog.v2/0.0.1920.1050/1920.54.1280.994/590.1080.1024.738@0.0.1920.1050" timestamp="1601075662848" />
   </component>
 </project>

@@ -28,6 +28,7 @@ import com.jaoafa.AntiAlts3.Discord;
 import com.jaoafa.AntiAlts3.Main;
 import com.jaoafa.AntiAlts3.MySQLDBManager;
 import com.jaoafa.AntiAlts3.PermissionsManager;
+import org.bukkit.scheduler.BukkitRunnable;
 
 public class Event_AsyncPreLogin implements Listener {
 	JavaPlugin plugin;
@@ -259,51 +260,63 @@ public class Event_AsyncPreLogin implements Listener {
 			}
 		}
 
-		setIPLastLogin(uuid, address);
-		setLastLogin(uuid);
-		setFirstLogin(uuid);
+		int finalAntiAltsUserID = AntiAltsUserID;
+		InternetDomainName finalBaseDomain = BaseDomain;
+		UUID finalUuid = uuid;
+
+		new BukkitRunnable() {
+			public void run() {
+				setIPLastLogin(finalUuid, address);
+				setLastLogin(finalUuid);
+				setFirstLogin(finalUuid);
+			}
+		}.runTaskAsynchronously(Main.getJavaPlugin());
 
 		// 9. ログイン許可？
 		if (!loginOK) {
 			return;
 		}
 
-		// 10. 同一AntiAltsUserIDのプレイヤーリストを管理部・モデレーター・常連に表示(Discordにも。)
-		Set<AntiAltsPlayer> IdenticalUserIDPlayers = getUsers(AntiAltsUserID, uuid);
-		if (!IdenticalUserIDPlayers.isEmpty()) {
-			List<String> names = IdenticalUserIDPlayers.stream().map(AntiAltsPlayer::getName)
-					.collect(Collectors.toList());
-			for (Player p : Bukkit.getServer().getOnlinePlayers()) {
-				if (!isAMR(p)) continue;
-				p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + "|-- " + name + " : - : サブアカウント情報 --|");
-				p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + "このプレイヤーには、以下、" + IdenticalUserIDPlayers.size()
-						+ "個見つかっています。");
-				p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + String.join(", ", names));
-			}
-			Discord.send("619637580987760656", "__**[AntiAlts3]**__ `" + name + "` : - : サブアカウント情報\n"
-					+ "このプレイヤーには、以下、" + IdenticalUserIDPlayers.size() + "個のアカウントが見つかっています。\n"
-					+ "`" + String.join(", ", names) + "`");
-		}
-
-		// 11. 同一ドメインの非同一UUIDで、48h以内にラストログインしたプレイヤーをリスト化。管理部・モデレーターに出力
-		Set<AntiAltsPlayer> IdenticalBaseDomainPlayers = getUsers(BaseDomain, uuid);
-		if (!IdenticalBaseDomainPlayers.isEmpty()) {
-			List<String> names = IdenticalBaseDomainPlayers.stream().map(AntiAltsPlayer::getName)
-					.collect(Collectors.toList());
-			for (Player p : Bukkit.getServer().getOnlinePlayers()) {
-				if (!isAM(p)) continue;
-				p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + "|-- " + name + " : - : 同一ベースドメイン情報 --|");
-				p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + "このプレイヤードメインと同一のプレイヤーが"
-						+ IdenticalBaseDomainPlayers.size()
-						+ "個見つかっています。");
-				p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + String.join(", ", names));
-			}
-			Discord.send("619637580987760656",
-					"__**[AntiAlts3]**__ `" + name + "` : - : 同一ベースドメイン情報 (`" + (BaseDomain != null ? BaseDomain.toString() : "null") + "`)\n"
-							+ "このプレイヤードメインと同一のプレイヤーが" + IdenticalBaseDomainPlayers.size()
-							+ "個見つかっています。\n"
+		new BukkitRunnable() {
+			public void run() {
+				// 10. 同一AntiAltsUserIDのプレイヤーリストを管理部・モデレーター・常連に表示(Discordにも。)
+				Set<AntiAltsPlayer> IdenticalUserIDPlayers = getUsers(finalAntiAltsUserID, finalUuid);
+				if (!IdenticalUserIDPlayers.isEmpty()) {
+					List<String> names = IdenticalUserIDPlayers.stream().map(AntiAltsPlayer::getName)
+							.collect(Collectors.toList());
+					for (Player p : Bukkit.getServer().getOnlinePlayers()) {
+						if (!isAMR(p)) continue;
+						p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + "|-- " + name + " : - : サブアカウント情報 --|");
+						p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + "このプレイヤーには、以下、" + IdenticalUserIDPlayers.size()
+								+ "個見つかっています。");
+						p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + String.join(", ", names));
+					}
+					Discord.send("619637580987760656", "__**[AntiAlts3]**__ `" + name + "` : - : サブアカウント情報\n"
+							+ "このプレイヤーには、以下、" + IdenticalUserIDPlayers.size() + "個のアカウントが見つかっています。\n"
 							+ "`" + String.join(", ", names) + "`");
-		}
+				}
+
+				// 11. 同一ドメインの非同一UUIDで、48h以内にラストログインしたプレイヤーをリスト化。管理部・モデレーターに出力
+				Set<AntiAltsPlayer> IdenticalBaseDomainPlayers = getUsers(finalBaseDomain, finalUuid);
+				if (!IdenticalBaseDomainPlayers.isEmpty()) {
+					List<String> names = IdenticalBaseDomainPlayers.stream().map(AntiAltsPlayer::getName)
+							.collect(Collectors.toList());
+					for (Player p : Bukkit.getServer().getOnlinePlayers()) {
+						if (!isAM(p)) continue;
+						p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + "|-- " + name + " : - : 同一ベースドメイン情報 --|");
+						p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + "このプレイヤードメインと同一のプレイヤーが"
+								+ IdenticalBaseDomainPlayers.size()
+								+ "個見つかっています。");
+						p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + String.join(", ", names));
+					}
+					Discord.send("619637580987760656",
+							"__**[AntiAlts3]**__ `" + name + "` : - : 同一ベースドメイン情報 (`" + (finalBaseDomain != null ? finalBaseDomain.toString() : "null") + "`)\n"
+									+ "このプレイヤードメインと同一のプレイヤーが" + IdenticalBaseDomainPlayers.size()
+									+ "個見つかっています。\n"
+									+ "`" + String.join(", ", names) + "`");
+				}
+			}
+		}.runTaskAsynchronously(Main.getJavaPlugin());
 	}
 
 	/**
@@ -663,11 +676,11 @@ public class Event_AsyncPreLogin implements Listener {
 			}
 			Connection conn = MySQLDBManager.getConnection();
 			PreparedStatement statement_selectAlready = conn
-					.prepareStatement("SELECT COUNT(*) FROM antialts_new WHERE uuid = ? AND ip = ?");
+					.prepareStatement("SELECT id FROM antialts_new WHERE uuid = ? AND ip = ? LIMIT 1");
 			statement_selectAlready.setString(1, uuid.toString());
 			statement_selectAlready.setString(2, address.getHostAddress());
 			ResultSet res_selectAlready = statement_selectAlready.executeQuery();
-			boolean bool = !res_selectAlready.next() || res_selectAlready.getInt(1) == 0;
+			boolean bool = !res_selectAlready.next();
 			res_selectAlready.close();
 			statement_selectAlready.close();
 			return bool;
