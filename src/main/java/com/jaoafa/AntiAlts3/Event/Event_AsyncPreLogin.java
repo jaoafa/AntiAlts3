@@ -7,10 +7,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import okhttp3.OkHttpClient;
@@ -35,6 +32,7 @@ import com.jaoafa.AntiAlts3.PermissionsManager;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.json.JSONObject;
 
+@SuppressWarnings("UnstableApiUsage")
 public class Event_AsyncPreLogin implements Listener {
 	JavaPlugin plugin;
 
@@ -271,7 +269,7 @@ public class Event_AsyncPreLogin implements Listener {
 
 		new BukkitRunnable() {
 			public void run() {
-				setIPLastLogin(finalUuid, address);
+				setIPLastLogin(address);
 				setLastLogin(finalUuid);
 				setFirstLogin(finalUuid);
 
@@ -651,9 +649,9 @@ public class Event_AsyncPreLogin implements Listener {
 
 	/**
 	 * 指定したIPに合致するすべてのデータに対して現在の時刻を設定します。
-	 * @param uuid 対象のUUID
+	 * @param address 対象のIP
 	 */
-	void setIPLastLogin(UUID uuid, InetAddress address) {
+	void setIPLastLogin(InetAddress address) {
 		try {
 			MySQLDBManager MySQLDBManager = Main.MySQLDBManager;
 			if (MySQLDBManager == null) {
@@ -803,7 +801,7 @@ public class Event_AsyncPreLogin implements Listener {
 				return;
 			}
 			Connection conn = MySQLDBManager.getConnection();
-			PreparedStatement statement = conn.prepareStatement("SELECT * FROM antialts_new WHERE uuid = ? AND ip = ? AND is_proxy != null");
+			PreparedStatement statement = conn.prepareStatement("SELECT * FROM antialts_new WHERE uuid = ? AND ip = ? AND is_proxy is NOT NULL");
 			statement.setString(1, uuid.toString());
 			statement.setString(2, ip);
 			ResultSet res = statement.executeQuery();
@@ -832,8 +830,9 @@ public class Event_AsyncPreLogin implements Listener {
 					return;
 				}
 
-				System.out.println("[AntiAlts3] Response: " + response.body().string());
-				JSONObject result = new JSONObject(response.body().string());
+				String response_text = Objects.requireNonNull(response.body()).string();
+				System.out.println("[AntiAlts3] Response: " + response_text);
+				JSONObject result = new JSONObject(response_text);
 				if(!result.getString("status").equals("ok")){
 					System.out.println("[AntiAlts3] ProxyCheck: " + result.getString("status") + " | " + result.getString("status"));
 				}
