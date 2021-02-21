@@ -1,5 +1,6 @@
 package com.jaoafa.AntiAlts3.Event;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -12,6 +13,9 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
@@ -29,6 +33,7 @@ import com.jaoafa.AntiAlts3.Main;
 import com.jaoafa.AntiAlts3.MySQLDBManager;
 import com.jaoafa.AntiAlts3.PermissionsManager;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.json.JSONObject;
 
 public class Event_AsyncPreLogin implements Listener {
 	JavaPlugin plugin;
@@ -269,6 +274,9 @@ public class Event_AsyncPreLogin implements Listener {
 				setIPLastLogin(finalUuid, address);
 				setLastLogin(finalUuid);
 				setFirstLogin(finalUuid);
+
+				// プロキシからのログインかどうかを判定し、そうであれば管理部・モデレーター・常連に表示(Discordにも。)
+				checkProxy(name, finalUuid, ip);
 			}
 		}.runTaskAsynchronously(Main.getJavaPlugin());
 
@@ -787,6 +795,80 @@ public class Event_AsyncPreLogin implements Listener {
 			return new HashSet<>();
 		}
 	}
+
+	void checkProxy(String name, UUID uuid, String ip){
+		try {
+			MySQLDBManager MySQLDBManager = Main.MySQLDBManager;
+			if (MySQLDBManager == null) {
+				return;
+			}
+			Connection conn = MySQLDBManager.getConnection();
+			PreparedStatement statement = conn.prepareStatement("SELECT * FROM antialts_new WHERE uuid = ? AND ip = ? AND is_proxy != null");
+			statement.setString(1, uuid.toString());
+			statement.setString(2, ip);
+			ResultSet res = statement.executeQuery();
+			Boolean is_proxy = null;
+			String proxy_type = null;
+			String proxy_risk = null;
+			if (res.next()) {
+				is_proxy = res.getBoolean("is_proxy");
+			}
+			res.close();
+			statement.close();
+
+			if (is_proxy == null){
+				// APIからプロキシかどうかを取得
+				String api_url = String.format("https://proxycheck.io/v2/%s?key=%s&vpn=1&asn=1&risk=1", ip, Main.proxycheck_apikey);
+				OkHttpClient client = new OkHttpClient();
+				Request request = new Request.Builder().url(api_url).get().build();
+				Response response = client.newCall(request).execute();
+				if (response.code() != 200) {
+					System.out.println("[AntiAlts3] URLGetConnected(Error): " + api_url);
+					System.out.println("[AntiAlts3] ResponseCode: " + response.code());
+					if (response.body() == null) {
+						return;
+					}
+					response.close();
+					return;
+				}
+
+				System.out.println("[AntiAlts3] Response: " + response.body().string());
+				JSONObject result = new JSONObject(response.body().string());
+				if(!result.getString("status").equals("ok")){
+					System.out.println("[AntiAlts3] ProxyCheck: " + result.getString("status") + " | " + result.getString("status"));
+				}
+				if(result.getString("status").equals("denied") || result.getString("status").equals("error")) {
+					return;
+				}
+				JSONObject ip_data = result.getJSONObject(ip);
+				is_proxy = ip_data.getString("proxy").equals("yes");
+				proxy_type = ip_data.getString("type");
+				proxy_risk = ip_data.getString("risk");
+				System.out.printf("[AntiAlts3] ProxyCheck: proxy:%s | type:%s | risk:%s%n", ip_data.getString("proxy"), proxy_type, proxy_risk);
+
+				PreparedStatement stmt_update = conn.prepareStatement("UPDATE antialts_new SET is_proxy = ?, proxy_type = ?, proxy_risk = ? WHERE uuid = ?");
+				stmt_update.setBoolean(1, is_proxy);
+				stmt_update.setString(2, proxy_type);
+				stmt_update.setString(3, proxy_risk);
+				stmt_update.setString(4, uuid.toString());
+				stmt_update.executeUpdate();
+				stmt_update.close();
+			}
+
+			if (is_proxy){
+				for (Player p : Bukkit.getServer().getOnlinePlayers()) {
+					if (!isAMR(p)) continue;
+					p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + "|-- " + name + " : - : プロキシ情報 --|");
+					p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + "このプレイヤーはプロキシ(" + proxy_type + ")を使用している可能性があります。");
+				}
+				Discord.send("597423444501463040", "__**[AntiAlts3]**__ `" + name + "` : - : プロキシ情報\n"
+						+ "このプレイヤーはプロキシ(`" + proxy_type + "` | `" + proxy_risk + " / 100`)を使用している可能性があります。");
+			}
+		} catch (SQLException | IOException e) {
+			Main.report(e);
+		}
+	}
+
 	boolean isAM(Player player){
 		String group = PermissionsManager.getPermissionMainGroup(player);
 		return group.equalsIgnoreCase("Admin") || group.equalsIgnoreCase("Moderator");

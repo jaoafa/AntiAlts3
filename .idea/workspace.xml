@@ -25,7 +25,7 @@
     <list default="true" id="43944b32-306c-4f43-b4b4-4a15f5a51760" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/jaoafa/AntiAlts3/Event/Event_AsyncPreLogin.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/jaoafa/AntiAlts3/Event/Event_AsyncPreLogin.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/plugin.yml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/plugin.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/jaoafa/AntiAlts3/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/jaoafa/AntiAlts3/Main.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -35,13 +35,6 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="MavenImportPreferences">
-    <option name="generalSettings">
-      <MavenGeneralSettings>
-        <option name="mavenHome" value="C:\Program Files\JetBrains\IntelliJ IDEA 2020.2\plugins\maven\lib\maven3" />
-      </MavenGeneralSettings>
-    </option>
-  </component>
   <component name="ProjectId" id="1fPNdx7TdABQJ7ukMUsrSVellND" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
@@ -50,10 +43,11 @@
   <component name="PropertiesComponent">
     <property name="ASKED_SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="aspect.path.notification.shown" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../Bakushinchi" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
   </component>
   <component name="RunManager">
     <configuration name="AntiAlts3 [install]" type="MavenRunConfiguration" factoryName="Maven" nameIsGenerated="true">
@@ -94,7 +88,10 @@
       <workItem from="1601072938642" duration="3126000" />
       <workItem from="1601983169980" duration="4002000" />
       <workItem from="1602095126538" duration="137000" />
-      <workItem from="1602305488621" duration="404000" />
+      <workItem from="1602305488621" duration="1677000" />
+      <workItem from="1602316868621" duration="103000" />
+      <workItem from="1602423568135" duration="99000" />
+      <workItem from="1613906776959" duration="4087000" />
     </task>
     <task id="LOCAL-00001" summary="change/fix: バグ修正、多少調整、メモリリーク改善">
       <created>1601075659830</created>
@@ -110,7 +107,14 @@
       <option name="project" value="LOCAL" />
       <updated>1601987519236</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="change: 処理負荷軽減">
+      <created>1602305931852</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1602305931852</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -131,46 +135,8 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="change/fix: バグ修正、多少調整、メモリリーク改善" />
     <MESSAGE value="change: getIdenticalIPSmallestID_And_SetIDで最も小さいAntiAltsUserID探すように(同一IP, 同一UUIDの取得)" />
-    <option name="LAST_COMMIT_MESSAGE" value="change: getIdenticalIPSmallestID_And_SetIDで最も小さいAntiAltsUserID探すように(同一IP, 同一UUIDの取得)" />
-  </component>
-  <component name="WindowStateProjectService">
-    <state x="586" y="203" key="#Inspections" timestamp="1601074626983">
-      <screen x="0" y="0" width="1920" height="1050" />
-    </state>
-    <state x="586" y="203" key="#Inspections/0.0.1920.1050/1920.54.1280.994/590.1080.1024.738@0.0.1920.1050" timestamp="1601074626983" />
-    <state x="414" y="180" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1602095181498">
-      <screen x="0" y="0" width="1920" height="1050" />
-    </state>
-    <state x="414" y="180" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1920.1050/1920.48.1280.994@0.0.1920.1050" timestamp="1602095181498" />
-    <state x="92" y="92" width="1736" height="866" key="DiffContextDialog" timestamp="1601074012128">
-      <screen x="0" y="0" width="1920" height="1050" />
-    </state>
-    <state x="92" y="92" width="1736" height="866" key="DiffContextDialog/0.0.1920.1050/1920.54.1280.994/590.1080.1024.738@0.0.1920.1050" timestamp="1601074012128" />
-    <state x="740" y="280" key="FileChooserDialogImpl" timestamp="1601073797824">
-      <screen x="0" y="0" width="1920" height="1050" />
-    </state>
-    <state x="740" y="280" key="FileChooserDialogImpl/0.0.1920.1050/1920.48.1280.994@0.0.1920.1050" timestamp="1596115866132" />
-    <state x="740" y="280" key="FileChooserDialogImpl/0.0.1920.1050/1920.54.1280.994/590.1080.1024.738@0.0.1920.1050" timestamp="1601073797824" />
-    <state width="1877" height="285" key="GridCell.Tab.0.bottom" timestamp="1602095265029">
-      <screen x="0" y="0" width="1920" height="1050" />
-    </state>
-    <state width="1877" height="285" key="GridCell.Tab.0.bottom/0.0.1920.1050/1920.48.1280.994@0.0.1920.1050" timestamp="1602095265029" />
-    <state width="1877" height="285" key="GridCell.Tab.0.center" timestamp="1602095265029">
-      <screen x="0" y="0" width="1920" height="1050" />
-    </state>
-    <state width="1877" height="285" key="GridCell.Tab.0.center/0.0.1920.1050/1920.48.1280.994@0.0.1920.1050" timestamp="1602095265029" />
-    <state width="1877" height="285" key="GridCell.Tab.0.left" timestamp="1602095265029">
-      <screen x="0" y="0" width="1920" height="1050" />
-    </state>
-    <state width="1877" height="285" key="GridCell.Tab.0.left/0.0.1920.1050/1920.48.1280.994@0.0.1920.1050" timestamp="1602095265029" />
-    <state width="1877" height="285" key="GridCell.Tab.0.right" timestamp="1602095265029">
-      <screen x="0" y="0" width="1920" height="1050" />
-    </state>
-    <state width="1877" height="285" key="GridCell.Tab.0.right/0.0.1920.1050/1920.48.1280.994@0.0.1920.1050" timestamp="1602095265029" />
-    <state x="552" y="258" key="Vcs.Push.Dialog.v2" timestamp="1601987520886">
-      <screen x="0" y="0" width="1920" height="1050" />
-    </state>
-    <state x="552" y="258" key="Vcs.Push.Dialog.v2/0.0.1920.1050/1920.48.1280.994@0.0.1920.1050" timestamp="1601987520886" />
-    <state x="552" y="258" key="Vcs.Push.Dialog.v2/0.0.1920.1050/1920.54.1280.994/590.1080.1024.738@0.0.1920.1050" timestamp="1601075662848" />
+    <MESSAGE value="change: 処理負荷軽減" />
+    <MESSAGE value="add: プロキシのチェック追加" />
+    <option name="LAST_COMMIT_MESSAGE" value="add: プロキシのチェック追加" />
   </component>
 </project>

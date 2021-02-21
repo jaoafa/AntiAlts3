@@ -42,6 +42,7 @@ public class Main extends JavaPlugin {
 	public static String sqlport = "3306";
 	public static String sqluser;
 	public static String sqlpassword;
+	public static String proxycheck_apikey = null;
 	public static long ConnectionCreate = 0;
 	public static FileConfiguration conf;
 
@@ -75,6 +76,10 @@ public class Main extends JavaPlugin {
 
 		if (conf.contains("sqlport")) {
 			sqlport = (String) conf.get("sqlport");
+		}
+
+		if (conf.contains("proxycheck_apikey")){
+			proxycheck_apikey = (String) conf.get("proxycheck_apikey");
 		}
 
 		try {
@@ -137,8 +142,7 @@ public class Main extends JavaPlugin {
 					.insert(18, "-")
 					.insert(23, "-")
 					.toString();
-			UUID uuid = UUID.fromString(uuid_hyphenated);
-			return uuid;
+			return UUID.fromString(uuid_hyphenated);
 		} else {
 			return null;
 		}
@@ -149,10 +153,8 @@ public class Main extends JavaPlugin {
 		if (json == null) {
 			return null;
 		} else if (json.has("data")) {
-			String uuid_hyphenated = new StringBuilder(json.getJSONObject("data").getString("uuid"))
-					.toString();
-			UUID uuid = UUID.fromString(uuid_hyphenated);
-			return uuid;
+			String uuid_hyphenated = json.getJSONObject("data").getString("uuid");
+			return UUID.fromString(uuid_hyphenated);
 		} else {
 			return null;
 		}
