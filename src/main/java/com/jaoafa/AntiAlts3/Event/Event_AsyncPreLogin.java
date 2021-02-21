@@ -807,9 +807,11 @@ public class Event_AsyncPreLogin implements Listener {
 			ResultSet res = statement.executeQuery();
 			Boolean is_proxy = null;
 			String proxy_type = null;
-			String proxy_risk = null;
+			Integer proxy_risk = null;
 			if (res.next()) {
 				is_proxy = res.getBoolean("is_proxy");
+				proxy_type = res.getString("proxy_type");
+				proxy_risk = res.getInt("proxy_risk");
 			}
 			res.close();
 			statement.close();
@@ -842,13 +844,13 @@ public class Event_AsyncPreLogin implements Listener {
 				JSONObject ip_data = result.getJSONObject(ip);
 				is_proxy = ip_data.getString("proxy").equals("yes");
 				proxy_type = ip_data.getString("type");
-				proxy_risk = ip_data.getString("risk");
+				proxy_risk = ip_data.getInt("risk");
 				System.out.printf("[AntiAlts3] ProxyCheck: proxy:%s | type:%s | risk:%s%n", ip_data.getString("proxy"), proxy_type, proxy_risk);
 
 				PreparedStatement stmt_update = conn.prepareStatement("UPDATE antialts_new SET is_proxy = ?, proxy_type = ?, proxy_risk = ? WHERE uuid = ?");
 				stmt_update.setBoolean(1, is_proxy);
 				stmt_update.setString(2, proxy_type);
-				stmt_update.setString(3, proxy_risk);
+				stmt_update.setInt(3, proxy_risk);
 				stmt_update.setString(4, uuid.toString());
 				stmt_update.executeUpdate();
 				stmt_update.close();
