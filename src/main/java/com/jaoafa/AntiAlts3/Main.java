@@ -5,6 +5,12 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.UUID;
 
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.hooks.AnnotatedEventManager;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -23,6 +29,17 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 public class Main extends JavaPlugin {
+	public static JavaPlugin JavaPlugin;
+	public static MySQLDBManager MySQLDBManager = null;
+	public static String sqlserver = "jaoafa.com";
+	public static String sqlport = "3306";
+	public static String sqluser;
+	public static String sqlpassword;
+	public static String proxycheck_apikey = null;
+	public static long ConnectionCreate = 0;
+	public static FileConfiguration conf;
+	private static JDA jda;
+
 	/**
 	 * プラグインが起動したときに呼び出し
 	 * @author mine_book000
@@ -36,16 +53,6 @@ public class Main extends JavaPlugin {
 		Load_Config(); // Config Load
 	}
 
-	public static JavaPlugin JavaPlugin;
-	public static MySQLDBManager MySQLDBManager = null;
-	public static String sqlserver = "jaoafa.com";
-	public static String sqlport = "3306";
-	public static String sqluser;
-	public static String sqlpassword;
-	public static String proxycheck_apikey = null;
-	public static long ConnectionCreate = 0;
-	public static FileConfiguration conf;
-
 	/**
 	 * コンフィグ読み込み
 	 * @author mine_book000
@@ -54,12 +61,23 @@ public class Main extends JavaPlugin {
 		conf = getConfig();
 
 		if (conf.contains("discordtoken")) {
-			Discord.start(this, conf.getString("discordtoken"));
+			try {
+				jda = JDABuilder.createDefault(conf.getString("discordtoken"))
+						.setAutoReconnect(true)
+						.setBulkDeleteSplittingEnabled(false)
+						.setContextEnabled(false)
+						.setEventManager(new AnnotatedEventManager()).build().awaitReady();
+			}catch(Exception e){
+				getLogger().info("Discordへの接続に失敗しました。 [Exception]");
+				getLogger().info("Disable AntiAlts3...");
+				getServer().getPluginManager().disablePlugin(this);
+			}
 		} else {
 			getLogger().info("Discordへの接続に失敗しました。 [conf NotFound]");
 			getLogger().info("Disable AntiAlts3...");
 			getServer().getPluginManager().disablePlugin(this);
 		}
+
 		if (conf.contains("sqluser") && conf.contains("sqlpassword")) {
 			Main.sqluser = conf.getString("sqluser");
 			Main.sqlpassword = conf.getString("sqlpassword");
@@ -99,20 +117,6 @@ public class Main extends JavaPlugin {
 		JavaPlugin = this;
 	}
 
-	/**
-	 * プラグインが停止したときに呼び出し
-	 * @author mine_book000
-	 * @since 2018/02/15
-	 */
-	@Override
-	public void onDisable() {
-
-	}
-
-	public static void SendMessage(CommandSender sender, Command cmd, String text) {
-		sender.sendMessage("[AntiAlts3] " + ChatColor.YELLOW + text);
-	}
-
 	public static void report(Throwable exception) {
 		exception.printStackTrace();
 		for (Player p : Bukkit.getServer().getOnlinePlayers()) {
@@ -125,7 +129,7 @@ public class Main extends JavaPlugin {
 		StringWriter sw = new StringWriter();
 		PrintWriter pw = new PrintWriter(sw);
 		exception.printStackTrace(pw);
-		Discord.send("618569153422426113", "AntiAlts3でエラーが発生しました。" + "\n"
+		discordSend(618569153422426113L, "AntiAlts3でエラーが発生しました。" + "\n"
 				+ "```" + sw.toString() + "```\n"
 				+ "Cause: `" + exception.getCause() + "`");
 	}
@@ -181,6 +185,24 @@ public class Main extends JavaPlugin {
 			e.printStackTrace();
 			return null;
 		}
+	}
+
+	public static boolean discordSend(long channel_id, String contents) {
+		TextChannel channel = jda.getTextChannelById(channel_id);
+		if(channel == null){
+			return false;
+		}
+		channel.sendMessage(contents).queue();
+		return true;
+	}
+
+	public static boolean discordSend(long channel_id, MessageEmbed embed) {
+		TextChannel channel = jda.getTextChannelById(channel_id);
+		if(channel == null){
+			return false;
+		}
+		channel.sendMessage(embed).queue();
+		return true;
 	}
 
 	public static JavaPlugin getJavaPlugin() {

@@ -1,5 +1,6 @@
 package com.jaoafa.AntiAlts3.Event;
 
+import java.awt.*;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.sql.Connection;
@@ -7,9 +8,13 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -25,7 +30,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import com.google.common.net.InternetDomainName;
 import com.jaoafa.AntiAlts3.AntiAltsPlayer;
-import com.jaoafa.AntiAlts3.Discord;
 import com.jaoafa.AntiAlts3.Main;
 import com.jaoafa.AntiAlts3.MySQLDBManager;
 import com.jaoafa.AntiAlts3.PermissionsManager;
@@ -35,6 +39,8 @@ import org.json.JSONObject;
 @SuppressWarnings("UnstableApiUsage")
 public class Event_AsyncPreLogin implements Listener {
 	JavaPlugin plugin;
+	long jaotanChannelId = 597423444501463040L;
+	long antialtsChannelId = 619637580987760656L;
 
 	public Event_AsyncPreLogin(JavaPlugin plugin) {
 		this.plugin = plugin;
@@ -143,9 +149,18 @@ public class Event_AsyncPreLogin implements Listener {
 					p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + "|-- " + name + " : - : プレイヤー名変更情報 --|");
 					p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + "このプレイヤーは、前回ログインからプレイヤー名を変更しています。(旧名: " + oldName + ")");
 				}
-				Discord.send("597423444501463040", "__**[AntiAlts3]**__ `" + name + "` : - : プレイヤー名変更情報\n"
-						+ "このプレイヤーは、前回ログインからプレイヤー名を変更しています。(旧名: `" + oldName + "`)\n"
-						+ "https://ja.namemc.com/profile/" + uuid.toString());
+				EmbedBuilder builder = new EmbedBuilder()
+						.setTitle("AntiAlts3 プレイヤー名変更情報",
+								String.format("https://users.jaoafa.com/%s", uuid.toString()))
+						.setDescription("このプレイヤーは、前回ログインからプレイヤー名を変更しています。")
+						.setColor(Color.YELLOW)
+						.addField("旧名", oldName, false)
+						.addField("NameMC", String.format("https://ja.namemc.com/profile/%s", uuid.toString()), false)
+						.setAuthor(name,
+								String.format("https://users.jaoafa.com/%s", uuid.toString()),
+								String.format("https://crafatar.com/renders/head/%s", uuid.toString()))
+						.setTimestamp(Instant.now());
+				Main.discordSend(jaotanChannelId, builder.build());
 
 				// 5. データベースのプレイヤーデータのLastLogin更新
 				changeLastLogin(uuid);
@@ -190,8 +205,21 @@ public class Event_AsyncPreLogin implements Listener {
 				p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + name + ": サブアカウントログイン規制(1 - メイン: "
 						+ MainAltID + ")");
 			}
-			Discord.send("597423444501463040",
-					"__**[AntiAlts3]**__ `" + name + "`: サブアカウントログイン規制(1 - メイン: `" + MainAltID + "`)");
+
+			EmbedBuilder builder = new EmbedBuilder()
+					.setTitle("AntiAlts3 サブアカウントログイン規制",
+							String.format("https://users.jaoafa.com/%s", uuid.toString()))
+					.setDescription("このプレイヤーからサブアカウントが検出されました。")
+					.setColor(Color.RED)
+					.addField("メインアカウント", MainAltID, false)
+					.addField("メインアカウントユーザーページ",
+							String.format("https://users.jaoafa.com/%s", MainAltUUID.toString()), false)
+					.addField("検出種別", "AntiAltsUserID同一・UUID差異 (1)", false)
+					.setAuthor(name,
+							String.format("https://users.jaoafa.com/%s", uuid.toString()),
+							String.format("https://crafatar.com/renders/head/%s", uuid.toString()))
+					.setTimestamp(Instant.now());
+			Main.discordSend(jaotanChannelId, builder.build());
 			loginOK = false;
 			plugin.getLogger().info("Login disallowed.");
 		}
@@ -231,8 +259,21 @@ public class Event_AsyncPreLogin implements Listener {
 					p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + name + ": サブアカウントログイン規制(2 - メイン: "
 							+ IdenticalIPMainAltID + ")");
 				}
-				Discord.send("597423444501463040",
-						"__**[AntiAlts3]**__ `" + name + "`: サブアカウントログイン規制(2 - メイン: `" + IdenticalIPMainAltID + "`)");
+
+				EmbedBuilder builder = new EmbedBuilder()
+						.setTitle("AntiAlts3 サブアカウントログイン規制",
+								String.format("https://users.jaoafa.com/%s", uuid.toString()))
+						.setDescription("このプレイヤーからサブアカウントが検出されました。")
+						.setColor(Color.RED)
+						.addField("メインアカウント", IdenticalIPMainAltID, false)
+						.addField("メインアカウントユーザーページ",
+								String.format("https://users.jaoafa.com/%s", IdenticalIPMainAltUUID.toString()), false)
+						.addField("検出種別", "IP同一・UUID差異 (2)", false)
+						.setAuthor(name,
+								String.format("https://users.jaoafa.com/%s", uuid.toString()),
+								String.format("https://crafatar.com/renders/head/%s", uuid.toString()))
+						.setTimestamp(Instant.now());
+				Main.discordSend(jaotanChannelId, builder.build());
 			}
 		}
 
@@ -265,16 +306,16 @@ public class Event_AsyncPreLogin implements Listener {
 
 		int finalAntiAltsUserID = AntiAltsUserID;
 		InternetDomainName finalBaseDomain = BaseDomain;
-		UUID finalUuid = uuid;
+		UUID finalUUID = uuid;
 
 		new BukkitRunnable() {
 			public void run() {
 				setIPLastLogin(address);
-				setLastLogin(finalUuid);
-				setFirstLogin(finalUuid);
+				setLastLogin(finalUUID);
+				setFirstLogin(finalUUID);
 
 				// プロキシからのログインかどうかを判定し、そうであれば管理部・モデレーター・常連に表示(Discordにも。)
-				checkProxy(name, finalUuid, ip);
+				checkProxy(name, finalUUID, ip);
 			}
 		}.runTaskAsynchronously(Main.getJavaPlugin());
 
@@ -286,24 +327,32 @@ public class Event_AsyncPreLogin implements Listener {
 		new BukkitRunnable() {
 			public void run() {
 				// 10. 同一AntiAltsUserIDのプレイヤーリストを管理部・モデレーター・常連に表示(Discordにも。)
-				Set<AntiAltsPlayer> IdenticalUserIDPlayers = getUsers(finalAntiAltsUserID, finalUuid);
+				Set<AntiAltsPlayer> IdenticalUserIDPlayers = getUsers(finalAntiAltsUserID, finalUUID);
 				if (!IdenticalUserIDPlayers.isEmpty()) {
 					List<String> names = IdenticalUserIDPlayers.stream().map(AntiAltsPlayer::getName)
 							.collect(Collectors.toList());
 					for (Player p : Bukkit.getServer().getOnlinePlayers()) {
 						if (!isAMR(p)) continue;
 						p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + "|-- " + name + " : - : サブアカウント情報 --|");
-						p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + "このプレイヤーには、以下、" + IdenticalUserIDPlayers.size()
-								+ "個見つかっています。");
+						p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + String.format("このプレイヤーには、%d個のサブアカウントが検出されています。", IdenticalUserIDPlayers.size()));
 						p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + String.join(", ", names));
 					}
-					Discord.send("619637580987760656", "__**[AntiAlts3]**__ `" + name + "` : - : サブアカウント情報\n"
-							+ "このプレイヤーには、以下、" + IdenticalUserIDPlayers.size() + "個のアカウントが見つかっています。\n"
-							+ "`" + String.join(", ", names) + "`");
+
+					EmbedBuilder builder = new EmbedBuilder()
+							.setTitle("AntiAlts3 サブアカウント情報",
+									String.format("https://users.jaoafa.com/%s", finalUUID.toString()))
+							.setDescription(String.format("このプレイヤーには、%d個のサブアカウントが検出されています。", IdenticalUserIDPlayers.size()))
+							.setColor(Color.YELLOW)
+							.addField("サブアカウント", String.join(", ", names), false)
+							.setAuthor(name,
+									String.format("https://users.jaoafa.com/%s", finalUUID.toString()),
+									String.format("https://crafatar.com/renders/head/%s", finalUUID.toString()))
+							.setTimestamp(Instant.now());
+					Main.discordSend(antialtsChannelId, builder.build());
 				}
 
 				// 11. 同一ドメインの非同一UUIDで、48h以内にラストログインしたプレイヤーをリスト化。管理部・モデレーターに出力
-				Set<AntiAltsPlayer> IdenticalBaseDomainPlayers = getUsers(finalBaseDomain, finalUuid);
+				Set<AntiAltsPlayer> IdenticalBaseDomainPlayers = getUsers(finalBaseDomain, finalUUID);
 				if (!IdenticalBaseDomainPlayers.isEmpty()) {
 					List<String> names = IdenticalBaseDomainPlayers.stream().map(AntiAltsPlayer::getName)
 							.collect(Collectors.toList());
@@ -315,11 +364,20 @@ public class Event_AsyncPreLogin implements Listener {
 								+ "個見つかっています。");
 						p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + String.join(", ", names));
 					}
-					Discord.send("619637580987760656",
-							"__**[AntiAlts3]**__ `" + name + "` : - : 同一ベースドメイン情報 (`" + (finalBaseDomain != null ? finalBaseDomain.toString() : "null") + "`)\n"
-									+ "このプレイヤードメインと同一のプレイヤーが" + IdenticalBaseDomainPlayers.size()
-									+ "個見つかっています。\n"
-									+ "`" + String.join(", ", names) + "`");
+
+					EmbedBuilder builder = new EmbedBuilder()
+							.setTitle("AntiAlts3 同一ベースドメイン情報",
+									String.format("https://users.jaoafa.com/%s", finalUUID.toString()))
+							.setDescription(String.format("このプレイヤーのドメイン(%s)と同一のプレイヤーが%d個検出されています。",
+									finalBaseDomain != null ? finalBaseDomain.toString() : "null",
+									IdenticalBaseDomainPlayers.size()))
+							.setColor(Color.YELLOW)
+							.addField("サブアカウント", String.join(", ", names), false)
+							.setAuthor(name,
+									String.format("https://users.jaoafa.com/%s", finalUUID.toString()),
+									String.format("https://crafatar.com/renders/head/%s", finalUUID.toString()))
+							.setTimestamp(Instant.now());
+					Main.discordSend(antialtsChannelId, builder.build());
 				}
 			}
 		}.runTaskAsynchronously(Main.getJavaPlugin());
@@ -862,8 +920,19 @@ public class Event_AsyncPreLogin implements Listener {
 					p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + "|-- " + name + " : - : プロキシ情報 --|");
 					p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + "このプレイヤーはプロキシ(" + proxy_type + ")を使用している可能性があります。");
 				}
-				Discord.send("597423444501463040", "__**[AntiAlts3]**__ `" + name + "` : - : プロキシ情報\n"
-						+ "このプレイヤーはプロキシ(`" + proxy_type + "` | `" + proxy_risk + " / 100`)を使用している可能性があります。");
+
+				EmbedBuilder builder = new EmbedBuilder()
+						.setTitle("AntiAlts3 プロキシ情報",
+								String.format("https://users.jaoafa.com/%s", uuid.toString()))
+						.setDescription("このプレイヤーはプロキシを使用している可能性があります。")
+						.setColor(Color.YELLOW)
+						.addField("プロキシ種別", proxy_type, false)
+						.addField("プロキシリスク", String.format("%d / 100", proxy_risk), false)
+						.setAuthor(name,
+								String.format("https://users.jaoafa.com/%s", uuid.toString()),
+								String.format("https://crafatar.com/renders/head/%s", uuid.toString()))
+						.setTimestamp(Instant.now());
+				Main.discordSend(jaotanChannelId, builder.build());
 			}
 		} catch (SQLException | IOException e) {
 			Main.report(e);
