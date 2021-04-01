@@ -1,66 +1,71 @@
 package com.jaoafa.AntiAlts3;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.UUID;
-
+import com.jaoafa.AntiAlts3.Event.Event_AsyncPreLogin;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
-import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.hooks.AnnotatedEventManager;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.jaoafa.AntiAlts3.Command.Cmd_Alts;
-import com.jaoafa.AntiAlts3.Event.Event_AsyncPreLogin;
-
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.Objects;
+import java.util.UUID;
 
 public class Main extends JavaPlugin {
-	public static JavaPlugin JavaPlugin;
-	public static MySQLDBManager MySQLDBManager = null;
-	public static String sqlserver = "jaoafa.com";
-	public static String sqlport = "3306";
-	public static String sqluser;
-	public static String sqlpassword;
-	public static String proxycheck_apikey = null;
-	public static long ConnectionCreate = 0;
-	public static FileConfiguration conf;
-	private static JDA jda;
+    public static JavaPlugin JavaPlugin;
+    public static MySQLDBManager MySQLDBManager = null;
+    public static String sqlserver = "jaoafa.com";
+    public static String sqlport = "3306";
+    public static String sqluser;
+    public static String sqlpassword;
+    public static String proxycheck_apikey = null;
+    public static FileConfiguration conf;
+    private static JDA jda;
 
-	/**
-	 * プラグインが起動したときに呼び出し
-	 * @author mine_book000
-	 * @since 2018/02/15
-	 */
-	@Override
-	public void onEnable() {
-		getCommand("alts").setExecutor(new Cmd_Alts(this));
-		getServer().getPluginManager().registerEvents(new Event_AsyncPreLogin(this), this);
+    private static JSONObject getHttpJson(String address) {
+        try {
+            OkHttpClient client = new OkHttpClient();
+            Request request = new Request.Builder().url(address).get().build();
+            Response response = client.newCall(request).execute();
+            if (response.code() != 200) {
+                System.out.println("[AntiAlts3] URLGetConnected(Error): " + address);
+                System.out.println("[AntiAlts3] ResponseCode: " + response.code());
+                if (response.body() != null) {
+                    System.out.println("[AntiAlts3] Response: " + Objects.requireNonNull(response.body()).string());
+                }
+                response.close();
+                return null;
+            }
+            JSONObject obj = new JSONObject(Objects.requireNonNull(response.body()).string());
+            response.close();
+            return obj;
+        } catch (IOException | JSONException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 
-		Load_Config(); // Config Load
-	}
+    /**
+     * コンフィグ読み込み
+     *
+     * @author mine_book000
+     */
+    private void Load_Config() {
+        conf = getConfig();
 
-	/**
-	 * コンフィグ読み込み
-	 * @author mine_book000
-	 */
-	private void Load_Config() {
-		conf = getConfig();
-
-		if (conf.contains("discordtoken")) {
+        if (conf.contains("discordtoken")) {
 			try {
 				jda = JDABuilder.createDefault(conf.getString("discordtoken"))
 						.setAutoReconnect(true)
@@ -154,46 +159,36 @@ public class Main extends JavaPlugin {
 
 	public static UUID getUUIDByDB(String name) {
 		JSONObject json = getHttpJson("https://api.jaoafa.com/users/" + name);
-		if (json == null) {
-			return null;
-		} else if (json.has("data")) {
-			String uuid_hyphenated = json.getJSONObject("data").getString("uuid");
-			return UUID.fromString(uuid_hyphenated);
-		} else {
-			return null;
-		}
-	}
+        if (json == null) {
+            return null;
+        } else if (json.has("data")) {
+            String uuid_hyphenated = json.getJSONObject("data").getString("uuid");
+            return UUID.fromString(uuid_hyphenated);
+        } else {
+            return null;
+        }
+    }
 
-	private static JSONObject getHttpJson(String address) {
-		try {
-			OkHttpClient client = new OkHttpClient();
-			Request request = new Request.Builder().url(address).get().build();
-			Response response = client.newCall(request).execute();
-			if (response.code() != 200) {
-				System.out.println("[AntiAlts3] URLGetConnected(Error): " + address);
-				System.out.println("[AntiAlts3] ResponseCode: " + response.code());
-				if (response.body() != null) {
-					System.out.println("[AntiAlts3] Response: " + response.body().string());
-				}
-				response.close();
-				return null;
-			}
-			JSONObject obj = new JSONObject(response.body().string());
-			response.close();
-			return obj;
-		} catch (IOException | JSONException e) {
-			e.printStackTrace();
-			return null;
-		}
-	}
+    /**
+     * プラグインが起動したときに呼び出し
+     *
+     * @author mine_book000
+     * @since 2018/02/15
+     */
+    @Override
+    public void onEnable() {
+        getServer().getPluginManager().registerEvents(new Event_AsyncPreLogin(this), this);
 
-	public static boolean discordSend(long channel_id, String contents) {
-		TextChannel channel = jda.getTextChannelById(channel_id);
-		if(channel == null){
-			return false;
-		}
-		channel.sendMessage(contents).queue();
-		return true;
+        Load_Config(); // Config Load
+    }
+
+    public static boolean discordSend(long channel_id, String contents) {
+        TextChannel channel = jda.getTextChannelById(channel_id);
+        if (channel == null) {
+            return false;
+        }
+        channel.sendMessage(contents).queue();
+        return true;
 	}
 
 	public static boolean discordSend(long channel_id, MessageEmbed embed) {

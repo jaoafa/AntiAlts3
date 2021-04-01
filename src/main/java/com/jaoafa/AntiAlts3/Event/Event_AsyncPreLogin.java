@@ -1,20 +1,13 @@
 package com.jaoafa.AntiAlts3.Event;
 
-import java.awt.*;
-import java.io.IOException;
-import java.net.InetAddress;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.time.Instant;
-import java.util.*;
-import java.util.List;
-import java.util.stream.Collectors;
-
+import com.google.common.net.InternetDomainName;
+import com.jaoafa.AntiAlts3.AntiAltsPlayer;
+import com.jaoafa.AntiAlts3.Main;
+import com.jaoafa.AntiAlts3.MySQLDBManager;
+import com.jaoafa.AntiAlts3.PermissionsManager;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -27,14 +20,17 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent.Result;
 import org.bukkit.plugin.java.JavaPlugin;
-
-import com.google.common.net.InternetDomainName;
-import com.jaoafa.AntiAlts3.AntiAltsPlayer;
-import com.jaoafa.AntiAlts3.Main;
-import com.jaoafa.AntiAlts3.MySQLDBManager;
-import com.jaoafa.AntiAlts3.PermissionsManager;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.json.JSONObject;
+
+import java.awt.*;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.sql.*;
+import java.time.Instant;
+import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("UnstableApiUsage")
 public class Event_AsyncPreLogin implements Listener {
@@ -109,50 +105,53 @@ public class Event_AsyncPreLogin implements Listener {
 		plugin.getLogger().info("Name: " + name);
 		plugin.getLogger().info("IP: " + ip);
 		plugin.getLogger().info("HOST: " + host);
-		plugin.getLogger().info("DOMAIN: " + domain);
-		if (BaseDomain != null)
-			plugin.getLogger().info("BASEDOMAIN: " + BaseDomain.toString());
+        plugin.getLogger().info("DOMAIN: " + domain);
+        if (BaseDomain != null)
+            plugin.getLogger().info("BASEDOMAIN: " + BaseDomain.toString());
 
-		MySQLDBManager MySQLDBManager = Main.MySQLDBManager;
-		if (MySQLDBManager == null) {
-			plugin.getLogger().info("MySQLDBManager is null");
-			return;
-		}
+        MySQLDBManager MySQLDBManager = Main.MySQLDBManager;
+        if (MySQLDBManager == null) {
+            plugin.getLogger().info("MySQLDBManager is null");
+            return;
+        }
 
-		// 2. UUIDをMojangAPIから取得
-		UUID uuid = Main.getUUIDByDB(name);
-		if (uuid != null) {
-			plugin.getLogger().info("The uuid was got from DB.");
-		} else {
-			uuid = Main.getUUID(name);
-			plugin.getLogger().info("The uuid was got from Mojang API.");
-		}
-		if(uuid == null){
-			plugin.getLogger().warning("uuid = null.");
-			String message = ChatColor.RED + "----- ANTI ALTS -----\n"
-					+ ChatColor.RESET + ChatColor.WHITE + "システム不具合によりUUIDの取得に失敗しました。少し時間をおいてから再度お試しください。";
-			event.disallow(Result.KICK_BANNED, message);
-			return;
-		}
-		plugin.getLogger().info("UUID: " + uuid.toString());
+        // 2. UUIDをMojangAPIから取得
+        UUID uuid = Main.getUUIDByDB(name);
+        if (uuid != null) {
+            plugin.getLogger().info("The uuid was got from DB.");
+        } else {
+            uuid = Main.getUUID(name);
+            plugin.getLogger().info("The uuid was got from Mojang API.");
+        }
+        if (uuid == null) {
+            plugin.getLogger().warning("uuid = null.");
+            Component component = Component.text().append(
+                Component.text("----- ANTI ALTS -----", NamedTextColor.RED),
+                Component.newline(),
+                Component.text("システム不具合によりUUIDの取得に失敗しました。少し時間をおいてから再度お試しください。", NamedTextColor.WHITE)
+            ).build();
+            event.disallow(Result.KICK_BANNED, component);
+            return;
+        }
+        plugin.getLogger().info("UUID: " + uuid.toString());
 
-		// 3. UUIDが合致するデータ(プレイヤーデータ)がAntiAltsのデータベーステーブルにあるかどうか調べる。あればAntiAltsUserID取得
-		int AntiAltsUserID = getAntiAltsUserID(uuid);
-		if (AntiAltsUserID != -1) {
-			// 4. UUIDが同じでMinecraftIDがデータベースのデータと違ったらデータベース更新。Discord通知
-			String oldName = changePlayerID(uuid, name);
-			if (oldName != null) {
-				plugin.getLogger().info("The player ID has been changed. (" + oldName + " -> " + name + ")");
+        // 3. UUIDが合致するデータ(プレイヤーデータ)がAntiAltsのデータベーステーブルにあるかどうか調べる。あればAntiAltsUserID取得
+        int AntiAltsUserID = getAntiAltsUserID(uuid);
+        if (AntiAltsUserID != -1) {
+            // 4. UUIDが同じでMinecraftIDがデータベースのデータと違ったらデータベース更新。Discord通知
+            String oldName = changePlayerID(uuid, name);
+            if (oldName != null) {
+                plugin.getLogger().info("The player ID has been changed. (" + oldName + " -> " + name + ")");
 
-				for (Player p : Bukkit.getServer().getOnlinePlayers()) {
-					if (!isAMR(p)) continue;
-					p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + "|-- " + name + " : - : プレイヤー名変更情報 --|");
-					p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + "このプレイヤーは、前回ログインからプレイヤー名を変更しています。(旧名: " + oldName + ")");
-				}
-				EmbedBuilder builder = new EmbedBuilder()
-						.setTitle("AntiAlts3 プレイヤー名変更情報",
-								String.format("https://users.jaoafa.com/%s", uuid.toString()))
-						.setDescription("このプレイヤーは、前回ログインからプレイヤー名を変更しています。")
+                for (Player p : Bukkit.getServer().getOnlinePlayers()) {
+                    if (!isAMR(p)) continue;
+                    p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + "|-- " + name + " : - : プレイヤー名変更情報 --|");
+                    p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + "このプレイヤーは、前回ログインからプレイヤー名を変更しています。(旧名: " + oldName + ")");
+                }
+                EmbedBuilder builder = new EmbedBuilder()
+                    .setTitle("AntiAlts3 プレイヤー名変更情報",
+                        String.format("https://users.jaoafa.com/%s", uuid.toString()))
+                    .setDescription("このプレイヤーは、前回ログインからプレイヤー名を変更しています。")
 						.setColor(Color.YELLOW)
 						.addField("旧名", oldName, false)
 						.addField("NameMC", String.format("https://ja.namemc.com/profile/%s", uuid.toString()), false)
@@ -192,37 +191,42 @@ public class Event_AsyncPreLogin implements Listener {
 		plugin.getLogger().info("MainAltID: " + MainAltID);
 
 		if (!uuid.equals(MainAltUUID)) {
-			// メインアカウントではない
-			plugin.getLogger().info("This account is not MainAccount. (MainAccount: " + MainAltID + ")");
-			String message = ChatColor.RED + "----- ANTI ALTS -----\n"
-					+ ChatColor.RESET + ChatColor.WHITE + "あなたは以下のアカウントで既にログインをされたことがあるようです。(1)\n"
-					+ ChatColor.RESET + ChatColor.AQUA + MainAltID + " (" + MainAltUUID.toString() + ")\n"
-					+ ChatColor.RESET + ChatColor.WHITE
-					+ "もしこの判定が誤判定と思われる場合は、公式Discord#supportでお問い合わせをお願い致します。";
-			event.disallow(Result.KICK_BANNED, message);
-			for (Player p : Bukkit.getServer().getOnlinePlayers()) {
-				if(isAM(p)) continue;
-				p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + name + ": サブアカウントログイン規制(1 - メイン: "
-						+ MainAltID + ")");
-			}
+            // メインアカウントではない
+            plugin.getLogger().info("This account is not MainAccount. (MainAccount: " + MainAltID + ")");
 
-			EmbedBuilder builder = new EmbedBuilder()
-					.setTitle("AntiAlts3 サブアカウントログイン規制",
-							String.format("https://users.jaoafa.com/%s", uuid.toString()))
-					.setDescription("このプレイヤーからサブアカウントが検出されました。")
-					.setColor(Color.RED)
-					.addField("メインアカウント", MainAltID, false)
-					.addField("メインアカウントユーザーページ",
-							String.format("https://users.jaoafa.com/%s", MainAltUUID.toString()), false)
-					.addField("検出種別", "AntiAltsUserID同一・UUID差異 (1)", false)
-					.setAuthor(name,
-							String.format("https://users.jaoafa.com/%s", uuid.toString()),
-							String.format("https://crafatar.com/renders/head/%s", uuid.toString()))
-					.setTimestamp(Instant.now());
-			Main.discordSend(jaotanChannelId, builder.build());
-			loginOK = false;
-			plugin.getLogger().info("Login disallowed.");
-		}
+            Component component = Component.text().append(
+                Component.text("----- ANTI ALTS -----", NamedTextColor.RED),
+                Component.newline(),
+                Component.text("あなたは以下のアカウントで既にログインをされたことがあるようです。(1)", NamedTextColor.WHITE),
+                Component.newline(),
+                Component.text(MainAltID + " (" + MainAltUUID.toString() + ")", NamedTextColor.AQUA),
+                Component.newline(),
+                Component.text("もしこの判定が誤判定と思われる場合は、公式Discord#supportでお問い合わせをお願い致します。", NamedTextColor.WHITE)
+            ).build();
+            event.disallow(Result.KICK_BANNED, component);
+            for (Player p : Bukkit.getServer().getOnlinePlayers()) {
+                if (isAM(p)) continue;
+                p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + name + ": サブアカウントログイン規制(1 - メイン: "
+                    + MainAltID + ")");
+            }
+
+            EmbedBuilder builder = new EmbedBuilder()
+                .setTitle("AntiAlts3 サブアカウントログイン規制",
+                    String.format("https://users.jaoafa.com/%s", uuid.toString()))
+                .setDescription("このプレイヤーからサブアカウントが検出されました。")
+                .setColor(Color.RED)
+                .addField("メインアカウント", MainAltID, false)
+                .addField("メインアカウントユーザーページ",
+                    String.format("https://users.jaoafa.com/%s", MainAltUUID.toString()), false)
+                .addField("検出種別", "AntiAltsUserID同一・UUID差異 (1)", false)
+                .setAuthor(name,
+                    String.format("https://users.jaoafa.com/%s", uuid.toString()),
+                    String.format("https://crafatar.com/renders/head/%s", uuid.toString()))
+                .setTimestamp(Instant.now());
+            Main.discordSend(jaotanChannelId, builder.build());
+            loginOK = false;
+            plugin.getLogger().info("Login disallowed.");
+        }
 
 		// 8. 同一IPな一覧を取得。非同一UUIDがあったらNG。
 		int IdenticalIPUsersCount = getIdenticalIPUsersCount(address, uuid);
@@ -245,36 +249,40 @@ public class Event_AsyncPreLogin implements Listener {
 			}
 			plugin.getLogger().info("IdenticalIPMainAltID: " + IdenticalIPMainAltID);
 			if (!uuid.equals(IdenticalIPMainAltUUID)) {
-				plugin.getLogger().info(
-						"This account is not MainAccount. (MainAccount: " + IdenticalIPMainAltID + " | IdenticalIP)");
-				String message = ChatColor.RED + "----- ANTI ALTS -----\n"
-						+ ChatColor.RESET + ChatColor.WHITE + "あなたは以下のアカウントで既にログインをされたことがあるようです。(2)\n"
-						+ ChatColor.RESET + ChatColor.AQUA + IdenticalIPMainAltID + " ("
-						+ IdenticalIPMainAltUUID.toString() + ")\n"
-						+ ChatColor.RESET + ChatColor.WHITE
-						+ "もしこの判定が誤判定と思われる場合は、公式Discord#supportでお問い合わせをお願い致します。";
-				event.disallow(Result.KICK_BANNED, message);
-				for (Player p : Bukkit.getServer().getOnlinePlayers()) {
-					if (!isAM(p)) continue;
-					p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + name + ": サブアカウントログイン規制(2 - メイン: "
-							+ IdenticalIPMainAltID + ")");
-				}
+                plugin.getLogger().info(
+                    "This account is not MainAccount. (MainAccount: " + IdenticalIPMainAltID + " | IdenticalIP)");
 
-				EmbedBuilder builder = new EmbedBuilder()
-						.setTitle("AntiAlts3 サブアカウントログイン規制",
-								String.format("https://users.jaoafa.com/%s", uuid.toString()))
-						.setDescription("このプレイヤーからサブアカウントが検出されました。")
-						.setColor(Color.RED)
-						.addField("メインアカウント", IdenticalIPMainAltID, false)
-						.addField("メインアカウントユーザーページ",
-								String.format("https://users.jaoafa.com/%s", IdenticalIPMainAltUUID.toString()), false)
-						.addField("検出種別", "IP同一・UUID差異 (2)", false)
-						.setAuthor(name,
-								String.format("https://users.jaoafa.com/%s", uuid.toString()),
-								String.format("https://crafatar.com/renders/head/%s", uuid.toString()))
-						.setTimestamp(Instant.now());
-				Main.discordSend(jaotanChannelId, builder.build());
-			}
+                Component component = Component.text().append(
+                    Component.text("----- ANTI ALTS -----", NamedTextColor.RED),
+                    Component.newline(),
+                    Component.text("あなたは以下のアカウントで既にログインをされたことがあるようです。(2)", NamedTextColor.WHITE),
+                    Component.newline(),
+                    Component.text(IdenticalIPMainAltID + " (" + IdenticalIPMainAltUUID.toString() + ")", NamedTextColor.AQUA),
+                    Component.newline(),
+                    Component.text("もしこの判定が誤判定と思われる場合は、公式Discord#supportでお問い合わせをお願い致します。", NamedTextColor.WHITE)
+                ).build();
+                event.disallow(Result.KICK_BANNED, component);
+                for (Player p : Bukkit.getServer().getOnlinePlayers()) {
+                    if (!isAM(p)) continue;
+                    p.sendMessage("[AntiAlts3] " + ChatColor.GREEN + name + ": サブアカウントログイン規制(2 - メイン: "
+                        + IdenticalIPMainAltID + ")");
+                }
+
+                EmbedBuilder builder = new EmbedBuilder()
+                    .setTitle("AntiAlts3 サブアカウントログイン規制",
+                        String.format("https://users.jaoafa.com/%s", uuid.toString()))
+                    .setDescription("このプレイヤーからサブアカウントが検出されました。")
+                    .setColor(Color.RED)
+                    .addField("メインアカウント", IdenticalIPMainAltID, false)
+                    .addField("メインアカウントユーザーページ",
+                        String.format("https://users.jaoafa.com/%s", IdenticalIPMainAltUUID.toString()), false)
+                    .addField("検出種別", "IP同一・UUID差異 (2)", false)
+                    .setAuthor(name,
+                        String.format("https://users.jaoafa.com/%s", uuid.toString()),
+                        String.format("https://crafatar.com/renders/head/%s", uuid.toString()))
+                    .setTimestamp(Instant.now());
+                Main.discordSend(jaotanChannelId, builder.build());
+            }
 		}
 
 		if (isNeedINSERT(uuid, address)) {

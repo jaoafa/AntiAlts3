@@ -3,6 +3,7 @@ main: com.jaoafa.AntiAlts3.Main
 version: 2020.10.08_03.26
 description: サブアカウントのログイン関連を制御するプラグイン
 database: true
+api-version: 1.16
 softdepend: [PermissionsEx, LuckPerms]
 author: mine_book000
 commands:
