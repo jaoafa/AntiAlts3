@@ -23,18 +23,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="43944b32-306c-4f43-b4b4-4a15f5a51760" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/jarRepositories.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/jarRepositories.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__com_google_code_findbugs_jsr305_3_0_2.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__net_md_5_bungeecord_chat_1_12_SNAPSHOT.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_bukkit_bukkit_1_12_2_R0_1_SNAPSHOT.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_spigotmc_spigot_api_1_12_2_R0_1_SNAPSHOT.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_yaml_snakeyaml_1_19.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AntiAlts3.iml" beforeDir="false" afterPath="$PROJECT_DIR$/AntiAlts3.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/jaoafa/AntiAlts3/Command/Cmd_Alts.java" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/jaoafa/AntiAlts3/Event/Event_AsyncPreLogin.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/jaoafa/AntiAlts3/Event/Event_AsyncPreLogin.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/plugin.yml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/plugin.yml" afterDir="false" />
     </list>
@@ -62,17 +52,6 @@
     <property name="vue.rearranger.settings.migration" value="true" />
   </component>
   <component name="RunManager">
-    <configuration default="true" type="ArquillianJUnit" factoryName="" nameIsGenerated="true">
-      <option name="arquillianRunConfiguration">
-        <value>
-          <option name="containerStateName" value="" />
-        </value>
-      </option>
-      <option name="TEST_OBJECT" value="class" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
     <configuration name="AntiAlts3 [install]" type="MavenRunConfiguration" factoryName="Maven" nameIsGenerated="true">
       <MavenSettings>
         <option name="myGeneralSettings" />
@@ -120,7 +99,10 @@
       <workItem from="1613941046068" duration="15000" />
       <workItem from="1614478378733" duration="5932000" />
       <workItem from="1614639116419" duration="1191000" />
-      <workItem from="1617284808995" duration="536000" />
+      <workItem from="1617284808995" duration="854000" />
+      <workItem from="1617288755678" duration="42000" />
+      <workItem from="1617300720772" duration="3248000" />
+      <workItem from="1619700485532" duration="125000" />
     </task>
     <task id="LOCAL-00001" summary="change/fix: バグ修正、多少調整、メモリリーク改善">
       <created>1601075659830</created>
@@ -171,11 +153,21 @@
       <option name="project" value="LOCAL" />
       <updated>1614484031370</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="feat: 1.16.5アップデート対応">
+      <created>1617285621466</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1617285621466</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="UpdateCopyrightCheckinHandler">
+    <option name="UPDATE_COPYRIGHT" value="true" />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">
@@ -190,6 +182,7 @@
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
+    <option name="CHECK_CODE_CLEANUP_BEFORE_PROJECT_COMMIT" value="true" />
     <MESSAGE value="change/fix: バグ修正、多少調整、メモリリーク改善" />
     <MESSAGE value="change: getIdenticalIPSmallestID_And_SetIDで最も小さいAntiAltsUserID探すように(同一IP, 同一UUIDの取得)" />
     <MESSAGE value="change: 処理負荷軽減" />
@@ -197,6 +190,10 @@
     <MESSAGE value="fix: java.lang.IllegalStateException: closed" />
     <MESSAGE value="fix: JSONObject[&quot;risk&quot;] is not a string." />
     <MESSAGE value="change: Discordへ送信するメッセージをEmbed化" />
-    <option name="LAST_COMMIT_MESSAGE" value="change: Discordへ送信するメッセージをEmbed化" />
+    <MESSAGE value="feat: 1.16.5アップデート対応" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: 1.16.5アップデート対応" />
+    <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="true" />
+    <option name="REFORMAT_BEFORE_PROJECT_COMMIT" value="true" />
+    <option name="REARRANGE_BEFORE_PROJECT_COMMIT" value="true" />
   </component>
 </project>

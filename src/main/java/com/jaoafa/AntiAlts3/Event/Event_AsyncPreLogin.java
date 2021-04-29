@@ -107,7 +107,7 @@ public class Event_AsyncPreLogin implements Listener {
 		plugin.getLogger().info("HOST: " + host);
         plugin.getLogger().info("DOMAIN: " + domain);
         if (BaseDomain != null)
-            plugin.getLogger().info("BASEDOMAIN: " + BaseDomain.toString());
+            plugin.getLogger().info("BASEDOMAIN: " + BaseDomain);
 
         MySQLDBManager MySQLDBManager = Main.MySQLDBManager;
         if (MySQLDBManager == null) {
@@ -133,7 +133,7 @@ public class Event_AsyncPreLogin implements Listener {
             event.disallow(Result.KICK_BANNED, component);
             return;
         }
-        plugin.getLogger().info("UUID: " + uuid.toString());
+        plugin.getLogger().info("UUID: " + uuid);
 
         // 3. UUIDが合致するデータ(プレイヤーデータ)がAntiAltsのデータベーステーブルにあるかどうか調べる。あればAntiAltsUserID取得
         int AntiAltsUserID = getAntiAltsUserID(uuid);
@@ -150,14 +150,14 @@ public class Event_AsyncPreLogin implements Listener {
                 }
                 EmbedBuilder builder = new EmbedBuilder()
                     .setTitle("AntiAlts3 プレイヤー名変更情報",
-                        String.format("https://users.jaoafa.com/%s", uuid.toString()))
+                        String.format("https://users.jaoafa.com/%s", uuid))
                     .setDescription("このプレイヤーは、前回ログインからプレイヤー名を変更しています。")
-						.setColor(Color.YELLOW)
-						.addField("旧名", oldName, false)
-						.addField("NameMC", String.format("https://ja.namemc.com/profile/%s", uuid.toString()), false)
+                    .setColor(Color.YELLOW)
+                    .addField("旧名", oldName, false)
+                    .addField("NameMC", String.format("https://ja.namemc.com/profile/%s", uuid), false)
 						.setAuthor(name,
-								String.format("https://users.jaoafa.com/%s", uuid.toString()),
-								String.format("https://crafatar.com/renders/head/%s", uuid.toString()))
+                            String.format("https://users.jaoafa.com/%s", uuid),
+                            String.format("https://crafatar.com/renders/head/%s", uuid))
 						.setTimestamp(Instant.now());
 				Main.discordSend(jaotanChannelId, builder.build());
 
@@ -212,16 +212,16 @@ public class Event_AsyncPreLogin implements Listener {
 
             EmbedBuilder builder = new EmbedBuilder()
                 .setTitle("AntiAlts3 サブアカウントログイン規制",
-                    String.format("https://users.jaoafa.com/%s", uuid.toString()))
+                    String.format("https://users.jaoafa.com/%s", uuid))
                 .setDescription("このプレイヤーからサブアカウントが検出されました。")
                 .setColor(Color.RED)
                 .addField("メインアカウント", MainAltID, false)
                 .addField("メインアカウントユーザーページ",
-                    String.format("https://users.jaoafa.com/%s", MainAltUUID.toString()), false)
+                    String.format("https://users.jaoafa.com/%s", MainAltUUID), false)
                 .addField("検出種別", "AntiAltsUserID同一・UUID差異 (1)", false)
                 .setAuthor(name,
-                    String.format("https://users.jaoafa.com/%s", uuid.toString()),
-                    String.format("https://crafatar.com/renders/head/%s", uuid.toString()))
+                    String.format("https://users.jaoafa.com/%s", uuid),
+                    String.format("https://crafatar.com/renders/head/%s", uuid))
                 .setTimestamp(Instant.now());
             Main.discordSend(jaotanChannelId, builder.build());
             loginOK = false;
@@ -270,16 +270,16 @@ public class Event_AsyncPreLogin implements Listener {
 
                 EmbedBuilder builder = new EmbedBuilder()
                     .setTitle("AntiAlts3 サブアカウントログイン規制",
-                        String.format("https://users.jaoafa.com/%s", uuid.toString()))
+                        String.format("https://users.jaoafa.com/%s", uuid))
                     .setDescription("このプレイヤーからサブアカウントが検出されました。")
                     .setColor(Color.RED)
                     .addField("メインアカウント", IdenticalIPMainAltID, false)
                     .addField("メインアカウントユーザーページ",
-                        String.format("https://users.jaoafa.com/%s", IdenticalIPMainAltUUID.toString()), false)
+                        String.format("https://users.jaoafa.com/%s", IdenticalIPMainAltUUID), false)
                     .addField("検出種別", "IP同一・UUID差異 (2)", false)
                     .setAuthor(name,
-                        String.format("https://users.jaoafa.com/%s", uuid.toString()),
-                        String.format("https://crafatar.com/renders/head/%s", uuid.toString()))
+                        String.format("https://users.jaoafa.com/%s", uuid),
+                        String.format("https://crafatar.com/renders/head/%s", uuid))
                     .setTimestamp(Instant.now());
                 Main.discordSend(jaotanChannelId, builder.build());
             }
@@ -348,13 +348,13 @@ public class Event_AsyncPreLogin implements Listener {
 
 					EmbedBuilder builder = new EmbedBuilder()
 							.setTitle("AntiAlts3 サブアカウント情報",
-									String.format("https://users.jaoafa.com/%s", finalUUID.toString()))
+                                String.format("https://users.jaoafa.com/%s", finalUUID))
 							.setDescription(String.format("このプレイヤーには、%d個のサブアカウントが検出されています。", IdenticalUserIDPlayers.size()))
 							.setColor(Color.YELLOW)
 							.addField("サブアカウント", String.join(", ", names), false)
 							.setAuthor(name,
-									String.format("https://users.jaoafa.com/%s", finalUUID.toString()),
-									String.format("https://crafatar.com/renders/head/%s", finalUUID.toString()))
+                                String.format("https://users.jaoafa.com/%s", finalUUID),
+                                String.format("https://crafatar.com/renders/head/%s", finalUUID))
 							.setTimestamp(Instant.now());
 					Main.discordSend(antialtsChannelId, builder.build());
 				}
@@ -375,15 +375,15 @@ public class Event_AsyncPreLogin implements Listener {
 
 					EmbedBuilder builder = new EmbedBuilder()
 							.setTitle("AntiAlts3 同一ベースドメイン情報",
-									String.format("https://users.jaoafa.com/%s", finalUUID.toString()))
+                                String.format("https://users.jaoafa.com/%s", finalUUID))
 							.setDescription(String.format("このプレイヤーのドメイン(%s)と同一のプレイヤーが%d個検出されています。",
 									finalBaseDomain != null ? finalBaseDomain.toString() : "null",
 									IdenticalBaseDomainPlayers.size()))
 							.setColor(Color.YELLOW)
 							.addField("サブアカウント", String.join(", ", names), false)
 							.setAuthor(name,
-									String.format("https://users.jaoafa.com/%s", finalUUID.toString()),
-									String.format("https://crafatar.com/renders/head/%s", finalUUID.toString()))
+                                String.format("https://users.jaoafa.com/%s", finalUUID),
+                                String.format("https://crafatar.com/renders/head/%s", finalUUID))
 							.setTimestamp(Instant.now());
 					Main.discordSend(antialtsChannelId, builder.build());
 				}
@@ -931,14 +931,14 @@ public class Event_AsyncPreLogin implements Listener {
 
 				EmbedBuilder builder = new EmbedBuilder()
 						.setTitle("AntiAlts3 プロキシ情報",
-								String.format("https://users.jaoafa.com/%s", uuid.toString()))
+                            String.format("https://users.jaoafa.com/%s", uuid))
 						.setDescription("このプレイヤーはプロキシを使用している可能性があります。")
 						.setColor(Color.YELLOW)
 						.addField("プロキシ種別", proxy_type, false)
 						.addField("プロキシリスク", String.format("%d / 100", proxy_risk), false)
 						.setAuthor(name,
-								String.format("https://users.jaoafa.com/%s", uuid.toString()),
-								String.format("https://crafatar.com/renders/head/%s", uuid.toString()))
+                            String.format("https://users.jaoafa.com/%s", uuid),
+                            String.format("https://crafatar.com/renders/head/%s", uuid))
 						.setTimestamp(Instant.now());
 				Main.discordSend(jaotanChannelId, builder.build());
 			}
