@@ -661,33 +661,33 @@ public class Event_AsyncPreLogin implements Listener {
 	 */
 	void setFirstLogin(UUID uuid) {
 		try {
-			MySQLDBManager MySQLDBManager = Main.MySQLDBManager;
-			if (MySQLDBManager == null) {
-				return;
-			}
-			Connection conn = MySQLDBManager.getConnection();
-			Timestamp firstlogin = new Timestamp(System.currentTimeMillis());
-			PreparedStatement statement = conn.prepareStatement("SELECT * FROM antialts_new WHERE uuid = ?");
-			statement.setString(1, uuid.toString());
-			ResultSet res = statement.executeQuery();
-			while (res.next()) {
-				if (res.getTimestamp("firstlogin").before(firstlogin)) {
-					firstlogin = res.getTimestamp("firstlogin");
-				}
-			}
+            MySQLDBManager MySQLDBManager = Main.MySQLDBManager;
+            if (MySQLDBManager == null) {
+                return;
+            }
+            Connection conn = MySQLDBManager.getConnection();
+            Timestamp firstlogin = new Timestamp(System.currentTimeMillis());
+            PreparedStatement statement = conn.prepareStatement("SELECT * FROM antialts_new WHERE uuid = ?", ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
+            statement.setString(1, uuid.toString());
+            ResultSet res = statement.executeQuery();
+            while (res.next()) {
+                if (res.getTimestamp("firstlogin").before(firstlogin)) {
+                    firstlogin = res.getTimestamp("firstlogin");
+                }
+            }
 
-			res.first();
-			while (res.next()) {
-				PreparedStatement statement_updatefirstlogin = conn
-						.prepareStatement("UPDATE antialts_new SET firstlogin = ? WHERE id = ?");
-				statement_updatefirstlogin.setTimestamp(1, firstlogin);
-				statement_updatefirstlogin.setInt(2, res.getInt("id"));
-				statement_updatefirstlogin.executeUpdate();
-				statement_updatefirstlogin.close();
-			}
-			res.close();
-			statement.close();
-		} catch (SQLException e) {
+            res.first();
+            while (res.next()) {
+                PreparedStatement statement_updatefirstlogin = conn
+                    .prepareStatement("UPDATE antialts_new SET firstlogin = ? WHERE id = ?");
+                statement_updatefirstlogin.setTimestamp(1, firstlogin);
+                statement_updatefirstlogin.setInt(2, res.getInt("id"));
+                statement_updatefirstlogin.executeUpdate();
+                statement_updatefirstlogin.close();
+            }
+            res.close();
+            statement.close();
+        } catch (SQLException e) {
 			Main.report(e);
 		}
 	}

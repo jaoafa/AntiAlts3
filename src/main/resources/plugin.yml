@@ -1,6 +1,6 @@
 name: ${project.artifactId}
 main: com.jaoafa.AntiAlts3.Main
-version: 2021.04.29_22.55
+version: 2021.06.13_14.28
 description: サブアカウントのログイン関連を制御するプラグイン
 database: true
 api-version: 1.16
