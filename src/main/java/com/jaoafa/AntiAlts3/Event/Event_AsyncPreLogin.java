@@ -34,9 +34,9 @@ import java.util.stream.Collectors;
 
 @SuppressWarnings("UnstableApiUsage")
 public class Event_AsyncPreLogin implements Listener {
-    JavaPlugin plugin;
-    long jaotanChannelId = 597423444501463040L;
-    long antialtsChannelId = 619637580987760656L;
+    final JavaPlugin plugin;
+    final long jaotanChannelId = 597423444501463040L;
+    final long antialtsChannelId = 619637580987760656L;
 
     public Event_AsyncPreLogin(JavaPlugin plugin) {
         this.plugin = plugin;
@@ -185,8 +185,8 @@ public class Event_AsyncPreLogin implements Listener {
         String MainAltID = name;
         UUID MainAltUUID = uuid;
         if (MainAccount != null) {
-            MainAltID = MainAccount.getName();
-            MainAltUUID = MainAccount.getUniqueId();
+            MainAltID = MainAccount.name();
+            MainAltUUID = MainAccount.uuid();
         }
         plugin.getLogger().info("MainAltID: " + MainAltID);
 
@@ -244,8 +244,8 @@ public class Event_AsyncPreLogin implements Listener {
             String IdenticalIPMainAltID = name;
             UUID IdenticalIPMainAltUUID = uuid;
             if (IdenticalIPMainAccount != null) {
-                IdenticalIPMainAltID = IdenticalIPMainAccount.getName();
-                IdenticalIPMainAltUUID = IdenticalIPMainAccount.getUniqueId();
+                IdenticalIPMainAltID = IdenticalIPMainAccount.name();
+                IdenticalIPMainAltUUID = IdenticalIPMainAccount.uuid();
             }
             plugin.getLogger().info("IdenticalIPMainAltID: " + IdenticalIPMainAltID);
             if (!uuid.equals(IdenticalIPMainAltUUID)) {
@@ -337,7 +337,7 @@ public class Event_AsyncPreLogin implements Listener {
                 // 10. 同一AntiAltsUserIDのプレイヤーリストを管理部・モデレーター・常連に表示(Discordにも。)
                 Set<AntiAltsPlayer> IdenticalUserIDPlayers = getUsers(finalAntiAltsUserID, finalUUID);
                 if (!IdenticalUserIDPlayers.isEmpty()) {
-                    List<String> names = IdenticalUserIDPlayers.stream().map(AntiAltsPlayer::getName)
+                    List<String> names = IdenticalUserIDPlayers.stream().map(AntiAltsPlayer::name)
                         .collect(Collectors.toList());
                     for (Player p : Bukkit.getServer().getOnlinePlayers()) {
                         if (!isAMR(p)) continue;
@@ -362,7 +362,7 @@ public class Event_AsyncPreLogin implements Listener {
                 // 11. 同一ドメインの非同一UUIDで、48h以内にラストログインしたプレイヤーをリスト化。管理部・モデレーターに出力
                 Set<AntiAltsPlayer> IdenticalBaseDomainPlayers = getUsers(finalBaseDomain, finalUUID);
                 if (!IdenticalBaseDomainPlayers.isEmpty()) {
-                    List<String> names = IdenticalBaseDomainPlayers.stream().map(AntiAltsPlayer::getName)
+                    List<String> names = IdenticalBaseDomainPlayers.stream().map(AntiAltsPlayer::name)
                         .collect(Collectors.toList());
                     for (Player p : Bukkit.getServer().getOnlinePlayers()) {
                         if (!isAM(p)) continue;
@@ -815,8 +815,7 @@ public class Event_AsyncPreLogin implements Listener {
                 }
                 AntiAltsPlayer player = new AntiAltsPlayer(name, uuid);
                 List<AntiAltsPlayer> filtered = players.stream().filter(
-                    _player -> _player != null && _player.getUniqueId().equals(player.getUniqueId()))
-                    .collect(Collectors.toList());
+                    _player -> _player != null && _player.uuid().equals(player.uuid())).toList();
                 if (!filtered.isEmpty()) {
                     continue;
                 }
@@ -854,8 +853,7 @@ public class Event_AsyncPreLogin implements Listener {
                 }
                 AntiAltsPlayer player = new AntiAltsPlayer(name, uuid);
                 List<AntiAltsPlayer> filtered = players.stream().filter(
-                    _player -> _player != null && _player.getUniqueId().equals(player.getUniqueId()))
-                    .collect(Collectors.toList());
+                    _player -> _player != null && _player.uuid().equals(player.uuid())).toList();
                 if (!filtered.isEmpty()) {
                     continue;
                 }
