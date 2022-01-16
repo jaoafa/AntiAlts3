@@ -1,10 +1,6 @@
 package com.jaoafa.AntiAlts3;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 
 public class MySQLDBManager {
 	private final String user;
@@ -43,7 +39,7 @@ public class MySQLDBManager {
 				+ "?autoReconnect=true&useUnicode=true&characterEncoding=utf8";
 		conn = DriverManager.getConnection(jdbcUrl, this.user, this.password);
 		if (WAIT_TIMEOUT == -1) {
-			getWaitTimeout();
+            WAIT_TIMEOUT = getWaitTimeout();
 		}
 		LAST_PACKET = System.currentTimeMillis();
 		conn.setHoldability(ResultSet.CLOSE_CURSORS_AT_COMMIT);

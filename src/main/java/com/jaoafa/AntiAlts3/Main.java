@@ -134,9 +134,9 @@ public class Main extends JavaPlugin {
 		StringWriter sw = new StringWriter();
 		PrintWriter pw = new PrintWriter(sw);
 		exception.printStackTrace(pw);
-		discordSend(618569153422426113L, "AntiAlts3でエラーが発生しました。" + "\n"
-				+ "```" + sw.toString() + "```\n"
-				+ "Cause: `" + exception.getCause() + "`");
+        discordSend(618569153422426113L, "AntiAlts3でエラーが発生しました。" + "\n"
+            + "```" + sw + "```\n"
+            + "Cause: `" + exception.getCause() + "`");
 	}
 
 	public static UUID getUUID(String name) {
@@ -196,7 +196,7 @@ public class Main extends JavaPlugin {
 		if(channel == null){
 			return false;
 		}
-		channel.sendMessage(embed).queue();
+        channel.sendMessageEmbeds(embed).queue();
 		return true;
 	}
 
