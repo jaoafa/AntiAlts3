@@ -1,9 +1,9 @@
 name: ${project.artifactId}
 main: com.jaoafa.AntiAlts3.Main
-version: 2022.01.16_22.46
+version: ${project.version}
 description: サブアカウントのログイン関連を制御するプラグイン
 database: true
-api-version: 1.18.1
+api-version: 1.18
 softdepend: [PermissionsEx, LuckPerms]
 author: mine_book000
 commands:
