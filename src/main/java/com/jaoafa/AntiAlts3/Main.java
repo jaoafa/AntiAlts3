@@ -22,6 +22,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.logging.Logger;
 
 public class Main extends JavaPlugin {
     public static JavaPlugin JavaPlugin;
@@ -40,10 +41,10 @@ public class Main extends JavaPlugin {
             Request request = new Request.Builder().url(address).get().build();
             Response response = client.newCall(request).execute();
             if (response.code() != 200) {
-                System.out.println("[AntiAlts3] URLGetConnected(Error): " + address);
-                System.out.println("[AntiAlts3] ResponseCode: " + response.code());
+                Main.getAntiAltsLogger().info("[AntiAlts3] URLGetConnected(Error): " + address);
+                Main.getAntiAltsLogger().info("[AntiAlts3] ResponseCode: " + response.code());
                 if (response.body() != null) {
-                    System.out.println("[AntiAlts3] Response: " + Objects.requireNonNull(response.body()).string());
+                    Main.getAntiAltsLogger().info("[AntiAlts3] Response: " + Objects.requireNonNull(response.body()).string());
                 }
                 response.close();
                 return null;
@@ -203,4 +204,8 @@ public class Main extends JavaPlugin {
 	public static JavaPlugin getJavaPlugin() {
 		return JavaPlugin;
 	}
+
+    public static Logger getAntiAltsLogger() {
+        return JavaPlugin.getLogger();
+    }
 }
