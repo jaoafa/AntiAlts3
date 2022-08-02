@@ -899,11 +899,12 @@ public class Event_AsyncPreLogin implements Listener {
                 proxy_risk = ip_data.getInt("risk");
                 Main.getAntiAltsLogger().info("[AntiAlts3] ProxyCheck: proxy:" + ip_data.getString("proxy") + " | type:" + proxy_type + " | risk:" + proxy_risk);
 
-                PreparedStatement stmt_update = conn.prepareStatement("UPDATE antialts_new SET is_proxy = ?, proxy_type = ?, proxy_risk = ? WHERE uuid = ?");
+                PreparedStatement stmt_update = conn.prepareStatement("UPDATE antialts_new SET is_proxy = ?, proxy_type = ?, proxy_risk = ? WHERE uuid = ? AND ip = ?");
                 stmt_update.setBoolean(1, is_proxy);
                 stmt_update.setString(2, proxy_type);
                 stmt_update.setInt(3, proxy_risk);
                 stmt_update.setString(4, uuid.toString());
+                stmt_update.setString(5, ip);
                 stmt_update.executeUpdate();
                 stmt_update.close();
             }
