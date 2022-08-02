@@ -35,27 +35,17 @@ public class Main extends JavaPlugin {
     public static FileConfiguration conf;
     private static JDA jda;
 
-    private static JSONObject getHttpJson(String address) {
-        try {
-            OkHttpClient client = new OkHttpClient();
-            Request request = new Request.Builder().url(address).get().build();
-            Response response = client.newCall(request).execute();
-            if (response.code() != 200) {
-                Main.getAntiAltsLogger().info("[AntiAlts3] URLGetConnected(Error): " + address);
-                Main.getAntiAltsLogger().info("[AntiAlts3] ResponseCode: " + response.code());
-                if (response.body() != null) {
-                    Main.getAntiAltsLogger().info("[AntiAlts3] Response: " + Objects.requireNonNull(response.body()).string());
-                }
-                response.close();
-                return null;
-            }
-            JSONObject obj = new JSONObject(Objects.requireNonNull(response.body()).string());
-            response.close();
-            return obj;
-        } catch (IOException | JSONException e) {
-            e.printStackTrace();
-            return null;
-        }
+    /**
+     * プラグインが起動したときに呼び出し
+     *
+     * @author mine_book000
+     * @since 2018/02/15
+     */
+    @Override
+    public void onEnable() {
+        getServer().getPluginManager().registerEvents(new Event_AsyncPreLogin(this), this);
+
+        Load_Config(); // Config Load
     }
 
     /**
@@ -123,6 +113,29 @@ public class Main extends JavaPlugin {
 		JavaPlugin = this;
 	}
 
+    private static JSONObject getHttpJson(String address) {
+        try {
+            OkHttpClient client = new OkHttpClient();
+            Request request = new Request.Builder().url(address).get().build();
+            Response response = client.newCall(request).execute();
+            if (response.code() != 200) {
+                Main.getAntiAltsLogger().info("[AntiAlts3] URLGetConnected(Error): " + address);
+                Main.getAntiAltsLogger().info("[AntiAlts3] ResponseCode: " + response.code());
+                if (response.body() != null) {
+                    Main.getAntiAltsLogger().info("[AntiAlts3] Response: " + Objects.requireNonNull(response.body()).string());
+                }
+                response.close();
+                return null;
+            }
+            JSONObject obj = new JSONObject(Objects.requireNonNull(response.body()).string());
+            response.close();
+            return obj;
+        } catch (IOException | JSONException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
 	public static void report(Throwable exception) {
 		exception.printStackTrace();
 		for (Player p : Bukkit.getServer().getOnlinePlayers()) {
@@ -168,19 +181,6 @@ public class Main extends JavaPlugin {
         } else {
             return null;
         }
-    }
-
-    /**
-     * プラグインが起動したときに呼び出し
-     *
-     * @author mine_book000
-     * @since 2018/02/15
-     */
-    @Override
-    public void onEnable() {
-        getServer().getPluginManager().registerEvents(new Event_AsyncPreLogin(this), this);
-
-        Load_Config(); // Config Load
     }
 
     public static boolean discordSend(long channel_id, String contents) {
