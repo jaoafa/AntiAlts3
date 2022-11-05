@@ -24,7 +24,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-assembly-plugin</artifactId>
-				<version>3.3.0</version>
+				<version>3.4.2</version>
 				<configuration>
 					<finalName>AntiAlts3</finalName>
 					<descriptorRefs>
@@ -82,12 +82,12 @@
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
-            <version>20220320</version>
+            <version>20220924</version>
         </dependency>
         <dependency>
             <groupId>net.dv8tion</groupId>
             <artifactId>JDA</artifactId>
-            <version>5.0.0-alpha.17</version>
+            <version>5.0.0-alpha.18</version>
             <exclusions>
                 <exclusion>
                     <groupId>club.minnced</groupId>
