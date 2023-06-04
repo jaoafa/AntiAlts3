@@ -4,7 +4,7 @@ import com.jaoafa.AntiAlts3.Event.Event_AsyncPreLogin;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.hooks.AnnotatedEventManager;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
