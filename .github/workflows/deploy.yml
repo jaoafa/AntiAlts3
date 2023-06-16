@@ -1,13 +1,19 @@
 name: Deploy
 
 on:
-  release:
+  workflow_run:
+    workflows:
+      - Maven
     types:
-      - published
+      - completed
+    branches:
+      - master
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
       - name: Create GitHub deployment
