@@ -162,7 +162,7 @@ public class Event_AsyncPreLogin implements Listener {
                 Main.discordSend(jaotanChannelId, builder.build());
 
                 // 5. データベースのプレイヤーデータのLastLogin更新
-                changeLastLogin(uuid);
+                setLastLogin(uuid);
             } else {
                 plugin.getLogger().info("The player ID has not been changed.");
             }
@@ -463,28 +463,6 @@ public class Event_AsyncPreLogin implements Listener {
     }
 
     /**
-     * 対象プレイヤーのLastLoginを変更します。
-     *
-     * @param uuid 対象のプレイヤーのUUID
-     */
-    void changeLastLogin(UUID uuid) {
-        try {
-            MySQLDBManager MySQLDBManager = Main.MySQLDBManager;
-            if (MySQLDBManager == null) {
-                return;
-            }
-            Connection conn = MySQLDBManager.getConnection();
-            PreparedStatement statement = conn
-                .prepareStatement("UPDATE antialts_new SET lastlogin = CURRENT_TIMESTAMP WHERE uuid = ?");
-            statement.setString(1, uuid.toString());
-            statement.executeUpdate();
-            statement.close();
-        } catch (SQLException e) {
-            Main.report(e);
-        }
-    }
-
-    /**
      * AntiAltsの判定対象で<b>ないか</b>どうかを返す。
      *
      * @param uuid 対象のプレイヤーのUUID
@@ -645,7 +623,7 @@ public class Event_AsyncPreLogin implements Listener {
             statement_sameIPorUUID.close();
             replaceIds.remove(AntiAltsUserID);
             for (int replaceId : replaceIds) {
-                System.out.printf("[getIdenticalIPSmallestID_And_SetID] %d -> %d%n", replaceId, AntiAltsUserID);
+                Main.getAntiAltsLogger().info("[getIdenticalIPSmallestID_And_SetID] %d -> %d".formatted(replaceId, AntiAltsUserID));
                 PreparedStatement replaceStatement = conn.prepareStatement("UPDATE antialts_new SET userid = ? WHERE userid = ?");
                 replaceStatement.setInt(1, AntiAltsUserID);
                 replaceStatement.setInt(2, replaceId);
@@ -897,8 +875,8 @@ public class Event_AsyncPreLogin implements Listener {
                 Request request = new Request.Builder().url(api_url).get().build();
                 Response response = client.newCall(request).execute();
                 if (response.code() != 200) {
-                    System.out.println("[AntiAlts3] URLGetConnected(Error): " + api_url);
-                    System.out.println("[AntiAlts3] ResponseCode: " + response.code());
+                    Main.getAntiAltsLogger().info("[AntiAlts3] URLGetConnected(Error): " + api_url);
+                    Main.getAntiAltsLogger().info("[AntiAlts3] ResponseCode: " + response.code());
                     if (response.body() == null) {
                         return;
                     }
@@ -907,10 +885,10 @@ public class Event_AsyncPreLogin implements Listener {
                 }
 
                 String response_text = Objects.requireNonNull(response.body()).string();
-                System.out.println("[AntiAlts3] Response: " + response_text);
+                Main.getAntiAltsLogger().info("[AntiAlts3] Response: " + response_text);
                 JSONObject result = new JSONObject(response_text);
                 if (!result.getString("status").equals("ok")) {
-                    System.out.println("[AntiAlts3] ProxyCheck: " + result.getString("status") + " | " + result.getString("status"));
+                    Main.getAntiAltsLogger().info("[AntiAlts3] ProxyCheck: " + result.getString("status") + " | " + result.getString("status"));
                 }
                 if (result.getString("status").equals("denied") || result.getString("status").equals("error")) {
                     return;
@@ -919,13 +897,14 @@ public class Event_AsyncPreLogin implements Listener {
                 is_proxy = ip_data.getString("proxy").equals("yes");
                 proxy_type = ip_data.getString("type");
                 proxy_risk = ip_data.getInt("risk");
-                System.out.printf("[AntiAlts3] ProxyCheck: proxy:%s | type:%s | risk:%s%n", ip_data.getString("proxy"), proxy_type, proxy_risk);
+                Main.getAntiAltsLogger().info("[AntiAlts3] ProxyCheck: proxy:" + ip_data.getString("proxy") + " | type:" + proxy_type + " | risk:" + proxy_risk);
 
-                PreparedStatement stmt_update = conn.prepareStatement("UPDATE antialts_new SET is_proxy = ?, proxy_type = ?, proxy_risk = ? WHERE uuid = ?");
+                PreparedStatement stmt_update = conn.prepareStatement("UPDATE antialts_new SET is_proxy = ?, proxy_type = ?, proxy_risk = ? WHERE uuid = ? AND ip = ?");
                 stmt_update.setBoolean(1, is_proxy);
                 stmt_update.setString(2, proxy_type);
                 stmt_update.setInt(3, proxy_risk);
                 stmt_update.setString(4, uuid.toString());
+                stmt_update.setString(5, ip);
                 stmt_update.executeUpdate();
                 stmt_update.close();
             }

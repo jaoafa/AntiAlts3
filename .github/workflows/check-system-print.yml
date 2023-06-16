@@ -1,0 +1,29 @@
+name: Check using System.out/err.print
+
+on: [ pull_request_target ]
+
+jobs:
+  check-system-print:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Setup reviewdog
+        uses: reviewdog/action-setup@v1
+
+      - name: Check using System.out.print
+        run: |
+          COUNT=`grep -rEn "System\.(out|err)\.print" --include=*.java src/main | tee ../system-prints.txt | wc -l || true`
+          echo count: $COUNT
+          cat ../system-prints.txt
+          cat ../system-prints.txt | reviewdog -efm="%f:%l:%m" -name="Check using System.out/err.print" -reporter=github-pr-review -level=warning
+          if [ "$COUNT" != "0" ]; then
+            echo "Found System.out/err.print in Java source files"
+            exit 1
+          fi
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}

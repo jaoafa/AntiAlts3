@@ -4,7 +4,7 @@ import com.jaoafa.AntiAlts3.Event.Event_AsyncPreLogin;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.hooks.AnnotatedEventManager;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -22,6 +22,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.logging.Logger;
 
 public class Main extends JavaPlugin {
     public static JavaPlugin JavaPlugin;
@@ -34,27 +35,17 @@ public class Main extends JavaPlugin {
     public static FileConfiguration conf;
     private static JDA jda;
 
-    private static JSONObject getHttpJson(String address) {
-        try {
-            OkHttpClient client = new OkHttpClient();
-            Request request = new Request.Builder().url(address).get().build();
-            Response response = client.newCall(request).execute();
-            if (response.code() != 200) {
-                System.out.println("[AntiAlts3] URLGetConnected(Error): " + address);
-                System.out.println("[AntiAlts3] ResponseCode: " + response.code());
-                if (response.body() != null) {
-                    System.out.println("[AntiAlts3] Response: " + Objects.requireNonNull(response.body()).string());
-                }
-                response.close();
-                return null;
-            }
-            JSONObject obj = new JSONObject(Objects.requireNonNull(response.body()).string());
-            response.close();
-            return obj;
-        } catch (IOException | JSONException e) {
-            e.printStackTrace();
-            return null;
-        }
+    /**
+     * プラグインが起動したときに呼び出し
+     *
+     * @author mine_book000
+     * @since 2018/02/15
+     */
+    @Override
+    public void onEnable() {
+        getServer().getPluginManager().registerEvents(new Event_AsyncPreLogin(this), this);
+
+        Load_Config(); // Config Load
     }
 
     /**
@@ -122,6 +113,29 @@ public class Main extends JavaPlugin {
 		JavaPlugin = this;
 	}
 
+    private static JSONObject getHttpJson(String address) {
+        try {
+            OkHttpClient client = new OkHttpClient();
+            Request request = new Request.Builder().url(address).get().build();
+            Response response = client.newCall(request).execute();
+            if (response.code() != 200) {
+                Main.getAntiAltsLogger().info("[AntiAlts3] URLGetConnected(Error): " + address);
+                Main.getAntiAltsLogger().info("[AntiAlts3] ResponseCode: " + response.code());
+                if (response.body() != null) {
+                    Main.getAntiAltsLogger().info("[AntiAlts3] Response: " + Objects.requireNonNull(response.body()).string());
+                }
+                response.close();
+                return null;
+            }
+            JSONObject obj = new JSONObject(Objects.requireNonNull(response.body()).string());
+            response.close();
+            return obj;
+        } catch (IOException | JSONException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
 	public static void report(Throwable exception) {
 		exception.printStackTrace();
 		for (Player p : Bukkit.getServer().getOnlinePlayers()) {
@@ -169,19 +183,6 @@ public class Main extends JavaPlugin {
         }
     }
 
-    /**
-     * プラグインが起動したときに呼び出し
-     *
-     * @author mine_book000
-     * @since 2018/02/15
-     */
-    @Override
-    public void onEnable() {
-        getServer().getPluginManager().registerEvents(new Event_AsyncPreLogin(this), this);
-
-        Load_Config(); // Config Load
-    }
-
     public static boolean discordSend(long channel_id, String contents) {
         TextChannel channel = jda.getTextChannelById(channel_id);
         if (channel == null) {
@@ -203,4 +204,8 @@ public class Main extends JavaPlugin {
 	public static JavaPlugin getJavaPlugin() {
 		return JavaPlugin;
 	}
+
+    public static Logger getAntiAltsLogger() {
+        return JavaPlugin.getLogger();
+    }
 }
